@@ -652,7 +652,7 @@ footer .brand {
     gap: 17px;
     font-size: 11px;
   }
-  nav a:nth-child(3) {
+  nav a[href="#scope"] {
     display: none;
   }
   .brand {
