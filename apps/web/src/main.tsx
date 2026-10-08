@@ -1,5 +1,8 @@
 import {
+  encodeBytes,
   formatReport,
+  type PolicyDocument,
+  parsePolicyDocument,
   parseVoucherDocument,
   type Report,
   serializeReport,
@@ -9,6 +12,8 @@ import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import scenarios from "./fixtures.json";
 import "./style.css";
+import { Pro } from "./pro/Pro";
+import { applyPolicyToDocument } from "./pro/policy";
 
 const repository = import.meta.env.VITE_REPOSITORY_URL as string | undefined;
 const hexField = (value: string) => ({ encoding: "hex", value });
@@ -35,6 +40,21 @@ function App() {
     setReport(undefined);
     setError("");
   };
+  function applyProPolicy(policy: PolicyDocument) {
+    const updated = applyPolicyToDocument(payload, policy);
+    const parsed = parsePolicyDocument(policy);
+    setPayload(updated);
+    setChannel(
+      parsed.expectedChannelId
+        ? encodeBytes(parsed.expectedChannelId, "hex")
+        : "",
+    );
+    setCap(policy.maxCumulativeAmount ?? "");
+    setIncrease(policy.maxIncrease ?? "");
+    setFinite(policy.rejectNonExpiring ?? false);
+    setRequireState(policy.requireState ?? true);
+    invalidate();
+  }
   function load(id: string) {
     const scenario = scenarios.find((s) => s.id === id);
     if (!scenario) return;
@@ -117,6 +137,7 @@ function App() {
         </a>
         <nav aria-label="Main">
           <a href="#playground">Playground</a>
+          <a href="#pro">Pro</a>
           <a href="#documentation">Documentation</a>
           <a href="#scope">Security model</a>
           {repository && (
@@ -491,6 +512,7 @@ function App() {
             </div>
           </div>
         </section>
+        <Pro onApply={applyProPolicy} />
         <section id="documentation" className="docs">
           <div>
             <p className="eyebrow">ONE ENGINE. THREE ENVIRONMENTS.</p>

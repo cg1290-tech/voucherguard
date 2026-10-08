@@ -1,6 +1,6 @@
 # API and document schema
 
-The core entry point is `@voucherguard/core`, ESM only. Types are emitted in `packages/core/dist`. Public exports: `PROTOCOL`, `UPSTREAM_COMMIT`, `U64_MAX`, `VoucherError`, `encodeVoucher`, `decodeVoucher`, `encodeBytes`, `decodeBytes`, `verifyVoucher`, `parseVoucherDocument`, `serializeReport`, `formatReport`, and associated TypeScript interfaces.
+The core entry point is `@voucherguard/core`, ESM only. Types are emitted in `packages/core/dist`. Public exports: `PROTOCOL`, `UPSTREAM_COMMIT`, `U64_MAX`, `VoucherError`, `encodeVoucher`, `decodeVoucher`, `encodeBytes`, `decodeBytes`, `verifyVoucher`, `parseVoucherDocument`, `parsePolicyDocument`, `serializeReport`, `formatReport`, and associated TypeScript interfaces.
 
 ## Binary APIs
 
@@ -96,3 +96,7 @@ Reason codes are defined by the exported `ReasonCode` union. A check category is
 The placeholders above describe the schema; [../examples/valid.json](../examples/valid.json) is a working signed fixture. Encoded fields can independently choose hex, base64 or base58. Authorizer, time, policy and state are optional at the document level, but missing context affects verification. Raw `message`/`signature` are mandatory.
 
 Never elevate the document's signer or state into trusted context just because the schema parses successfully.
+
+## Standalone policy parsing
+
+`parsePolicyDocument(value: unknown): Policy` validates the exact policy JSON schema above without a voucher or cryptographic check. The exported `PolicyDocument` interface represents encoded channel bytes and decimal strings. The document adapter delegates to this same function; the Pro Builder reuses it. No Wallet Standard or Solana RPC dependencies enter the core package.
