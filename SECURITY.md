@@ -36,8 +36,8 @@ Dependency installation/build tools can access the network during initial setup.
 
 ## Reporting vulnerabilities
 
-Before public release, the maintainer must enable GitHub private vulnerability reporting for `cg1290-tech/voucherguard` and verify its availability. No private email or reporting service has been configured in this local preparation.
+Private vulnerability reporting is enabled for `cg1290-tech/voucherguard`. Use the repository Security → Report a vulnerability interface. No private email address or external reporting service is required.
 
-Once available, use the repository Security → Report a vulnerability interface. Do not post exploit details or secrets in public issues. Include affected version, minimal reproduction, violated invariant, trust assumptions and expected/observed behavior. This project currently promises no response SLA or bounty.
+Do not post exploit details or secrets in public issues. Include affected version, minimal reproduction, violated invariant, trust assumptions and expected/observed behavior. This project currently promises no response SLA or bounty.
 
-Only 0.1.x is in scope for initial maintenance. No public release has occurred. Independent review remains required before relying on it for consequential payment authorization.
+Only 0.1.x is in scope for initial maintenance. The initial 0.1.0 release is a pre-release, not a production security certification. Independent review remains required before relying on it for consequential payment authorization.
