@@ -46,9 +46,11 @@ export function Pro({
         <span className="pro-network">SOLANA MAINNET-BETA</span>
       </div>
       <p className="pro-intro">
-        An additional client-side toolkit for holders of the future $VG token.
-        The verification playground stays free, with no wallet connection
-        required.
+        Build, export and apply verification policies with Policy Builder.
+        Holder access is planned for the future $VG token and is not active yet.
+        Pro checks eligibility through a read-only wallet connection and public
+        Solana RPC. The verification playground stays free, with no wallet or
+        RPC required.
       </p>
       <div className="pro-access">
         <div className="pro-access-copy">
