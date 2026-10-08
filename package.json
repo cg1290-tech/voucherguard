@@ -1,0 +1,35 @@
+{
+  "name": "voucherguard",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm --filter @voucherguard/core build && pnpm --filter @voucherguard/cli build && pnpm --filter @voucherguard/web build",
+    "dev": "pnpm --filter @voucherguard/web dev",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "fixtures": "node --import tsx scripts/fixtures.ts",
+    "check": "pnpm typecheck && pnpm lint && pnpm build && pnpm test",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vitest": "^3.2.4",
+    "@biomejs/biome": "^2.2.0",
+    "tsx": "^4.20.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@playwright/test": "^1.55.0"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.0.1",
+    "@scure/base": "^2.0.0"
+  }
+}
