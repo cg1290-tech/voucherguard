@@ -1,0 +1,37 @@
+{
+  "protocol": "solana-payment-channels/v1",
+  "message": {
+    "encoding": "hex",
+    "value": "56010707070707070707070707070707070707070707070707070707070707070707f4010000000000000094357700000000"
+  },
+  "signature": {
+    "encoding": "hex",
+    "value": "c96d64c8c366c4cb6019f7c77d244cf8f30f4b56c8198d89deaa7f7de3620bcaa32c8648a16142df4f14855ea1e643da633b40c24cab5442eb382cccc03f7b0e"
+  },
+  "authorizedSigner": {
+    "encoding": "hex",
+    "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+  },
+  "now": "1900000000",
+  "policy": {
+    "expectedChannelId": {
+      "encoding": "hex",
+      "value": "0707070707070707070707070707070707070707070707070707070707070707"
+    },
+    "maxCumulativeAmount": "1000",
+    "rejectNonExpiring": true
+  },
+  "trustedState": {
+    "channelId": {
+      "encoding": "hex",
+      "value": "0707070707070707070707070707070707070707070707070707070707070707"
+    },
+    "authorizedSigner": {
+      "encoding": "hex",
+      "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+    },
+    "deposit": "2000",
+    "settledAmount": "100",
+    "status": "Open"
+  }
+}

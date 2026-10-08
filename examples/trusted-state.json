@@ -1,0 +1,13 @@
+{
+  "channelId": {
+    "encoding": "hex",
+    "value": "0707070707070707070707070707070707070707070707070707070707070707"
+  },
+  "authorizedSigner": {
+    "encoding": "hex",
+    "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+  },
+  "deposit": "2000",
+  "settledAmount": "100",
+  "status": "Open"
+}
