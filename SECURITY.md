@@ -24,11 +24,11 @@ Default checks require channel state. Explicit `requireState:false` excludes abs
 
 Detached Ed25519 verification uses `@noble/curves` with `zip215:false` to reject noncanonical/small-order edge cases conservatively. This is not a claim of complete consensus equivalence with the Solana precompile. Channel checks model ordinary Open-channel `settle`; `settle_and_seal` and transaction verification are outside scope.
 
-No on-chain account authentication, balances, PDA derivation, escrow validation, recipient distribution, x402 payload verification, fee-payer safety, program execution, inclusion/finality, wallet operation or payment execution occurs. PASS does not certify funds or settlement. It is conditional evidence, not a security certification.
+The voucher verifier performs no on-chain account authentication, balance inspection, PDA derivation, escrow validation, recipient distribution, x402 payload verification, fee-payer safety, program execution, inclusion/finality, wallet operation or payment execution. PASS does not certify funds or settlement. It is conditional evidence, not a security certification.
 
 ## Data and operational handling
 
-No private keys are accepted by public APIs, CLI or playground. The development fixture generator includes a PUBLIC TEST ONLY seed, all 32 bytes equal to `0x2a`. Never fund this key. There are no network calls in core/CLI verification. The static web app loads local assets only; manually clicking a configured GitHub link opens that external site. JSON/text reports include public voucher bytes, policies and supplied state, which may still contain sensitive commercial data; exports remain local unless the user shares them.
+No private keys are accepted by public APIs, CLI or playground. The development fixture generator includes a PUBLIC TEST ONLY seed, all 32 bytes equal to `0x2a`. Never fund this key. There are no network calls in core/CLI verification. The optional Pro section uses a Wallet Standard connection and read-only public RPC calls for token access; the free playground remains independent. The static web app loads local assets only; manually clicking a configured GitHub link opens that external site. JSON/text reports include public voucher bytes, policies and supplied state, which may still contain sensitive commercial data; exports remain local unless the user shares them.
 
 CLI file inputs and web payloads have a 64 KiB cap; encoded byte fields have length bounds. BigInt ranges, exact byte lengths, explicit endianness, canonical encodings and unknown JSON/policy fields are validated. No eval, dynamic execution, secret logging, storage, telemetry, database or transaction submission is present. JSON reports are displayed as text by React, never injected HTML.
 
@@ -41,3 +41,9 @@ Private vulnerability reporting is enabled for `cg1290-tech/voucherguard`. Use t
 Do not post exploit details or secrets in public issues. Include affected version, minimal reproduction, violated invariant, trust assumptions and expected/observed behavior. This project currently promises no response SLA or bounty.
 
 Only 0.1.x is in scope for initial maintenance. The initial 0.1.0 release is a pre-release, not a production security certification. Independent review remains required before relying on it for consequential payment authorization.
+
+## Optional Pro holder access
+
+Pro reads the configured mainnet mint and connected wallet's token accounts through a public HTTPS RPC, checks program/owner/mint/decimals, and compares BigInt raw amounts. Requests are bounded and canceled on account changes. Failure or unavailable data cannot grant access. No transaction, message signature, approval, delegation, seed or private key is requested. A public wallet address is disclosed to the configured RPC only for an explicit connection with a configured mint.
+
+The gate is bypassable client-side convenience, not authentication or protection for exclusive code/IP. A fake provider can claim a holder address without proving control; a dishonest/stale RPC can misreport data. Do not rely on it for privileged APIs, secrets, funds or other sensitive operations. Normal production ships no test wallet, mock RPC or development unlock flag. The mint remains unset until independently confirmed after launch. See [Pro model and activation](docs/pro.md).
