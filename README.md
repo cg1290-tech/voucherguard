@@ -112,7 +112,7 @@ Pro discovers Wallet Standard-compatible Solana wallets using the official `@wal
 
 The working **Policy Builder** provides amount/increase caps, finite expiry, validity windows, trusted-state requirement and expected channel controls. It uses the core policy schema, previews/copies/downloads JSON and applies only the policy to the free playground while preserving signed bytes, signature and supplied state. Standard/Conservative presets are editable examples, not security guarantees. Batch Verification and Advanced Reports are explicitly planned and unimplemented.
 
-Configure public build variables `VITE_VG_TOKEN_MINT`, `VITE_VG_RPC_URL`, `VITE_VG_HOLDER_THRESHOLD` and `VITE_VG_NETWORK` after independently confirming the official mint. The manual Pages workflow accepts matching repository variables `VG_TOKEN_MINT`, `VG_RPC_URL`, `VG_HOLDER_THRESHOLD` and `VG_NETWORK`. No mint variable means no holder access. See [configuration, activation and test procedure](docs/pro.md).
+Configure public build variables `VITE_VG_TOKEN_MINT`, `VITE_VG_RPC_URL`, `VITE_VG_HOLDER_THRESHOLD` and `VITE_VG_NETWORK` after independently confirming the official mint. The manual GitHub Pages workflow accepts matching repository variables `VG_TOKEN_MINT`, `VG_RPC_URL`, `VG_HOLDER_THRESHOLD` and `VG_NETWORK`. No mint variable means no holder access. See [configuration, activation and test procedure](docs/pro.md).
 
 **Client-side gating is bypassable.** Bundled JavaScript cannot protect secrets, privileged APIs or exclusive IP. The gate is a convenience feature, not cryptographic wallet authentication or a settlement/security guarantee. Tests provide injected wallet/RPC fixtures outside production code; no development bypass is shipped.
 
@@ -161,7 +161,7 @@ Initial Playwright browser installation downloads a test browser; this is a deve
 
 ## Static deployment
 
-`apps/web/dist` is the complete static site. Relative assets support GitHub Pages subpaths; no history routing is used. See [deployment instructions](docs/deployment.md). The Pages workflow runs **only on manual dispatch**. The source repository is published under cg1290-tech. npm packages are not published. Static deployment is managed by the manual Pages workflow.
+`apps/web/dist` is the complete static site. Relative assets support GitHub Pages subpaths; no history routing is used. See [deployment instructions](docs/deployment.md). The production site at [voucherguard.pages.dev](https://voucherguard.pages.dev/) uses Cloudflare Pages Direct Upload; GitHub commits do not automatically update it. GitHub Pages remains a fallback with a workflow that runs **only on manual dispatch**. The source repository is published under cg1290-tech. npm packages are not published.
 
 ## Roadmap and contributions
 
