@@ -2,7 +2,7 @@
 
 **Verify what your AI agents sign.**
 
-[Live playground](https://cg1290-tech.github.io/voucherguard/) · [Source repository](https://github.com/cg1290-tech/voucherguard)
+[Live playground](https://voucherguard.pages.dev/) · [Source repository](https://github.com/cg1290-tech/voucherguard)
 
 An offline, open-source verification toolkit for **Solana Foundation payment channel V1 vouchers**. Decode the exact signed message, verify Ed25519 against an independently trusted public key, enforce application policies, and compare cumulative authorization against a supplied trusted channel snapshot.
 
