@@ -23,6 +23,10 @@ jobs:
         env:
           VITE_BASE_PATH: /voucherguard/
           VITE_REPOSITORY_URL: https://github.com/cg1290-tech/voucherguard
+          VITE_VG_TOKEN_MINT: ${{ vars.VG_TOKEN_MINT }}
+          VITE_VG_RPC_URL: ${{ vars.VG_RPC_URL }}
+          VITE_VG_HOLDER_THRESHOLD: ${{ vars.VG_HOLDER_THRESHOLD }}
+          VITE_VG_NETWORK: ${{ vars.VG_NETWORK }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: apps/web/dist
