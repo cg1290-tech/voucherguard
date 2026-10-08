@@ -8,7 +8,7 @@ An offline, open-source verification toolkit for **Solana Foundation payment cha
 
 AI agents can authorize spending. A valid signature alone does not establish that the authorization matches your channel, budget, clock or settlement watermark. VoucherGuard makes those checks explicit and reviewable.
 
-**No backend, RPC, wallet connection, private-key collection, payment execution, telemetry or AI inference.** Not an agent platform. Not a full x402 verifier. **Not independently audited.**
+**The free verifier needs no backend, RPC or wallet connection.** No private-key collection, payment execution, telemetry or AI inference. Optional VoucherGuard Pro uses read-only wallet connection and public Solana RPC for holder eligibility. Not an agent platform. Not a full x402 verifier. **Not independently audited.**
 
 ![Playground preview](docs/preview-desktop.png)
 
@@ -103,6 +103,18 @@ All example documents are simulations with a public test-only seed and explicit 
 Paste a document, supply the independently expected signer and channel, edit amount/increase caps and expiry/state policies, then verify locally. Channel state and additional time-window policies can be edited in JSON. Controls explicitly override corresponding JSON fields. Clear Unix time to use the local clock. Changing inputs clears the previous result.
 
 Seven shared fixtures demonstrate valid authorization, signature tampering, expiration, excessive amount, channel mismatch, stale watermark and insufficient state. Export JSON or a readable text report. PNG report export is optional and not implemented; browser screenshots can be taken normally.
+
+## VoucherGuard Pro (pre-launch)
+
+The static website now includes an optional holder toolkit for the future **$VG** token. The official mint is **unset by default**: production shows **Token access coming soon**, and wallet connection alone never unlocks tools. The free verification playground stays available offline.
+
+Pro discovers Wallet Standard-compatible Solana wallets using the official `@wallet-standard` libraries. It requests only a public account, verifies the RPC is mainnet-beta, reads mint decimals and exact-owner/exact-mint SPL Token or Token-2022 accounts, and aggregates raw amounts with BigInt. The default threshold is one whole token; malformed configuration, missing data, unsupported networks and RPC errors close access. Account changes and manual refresh recheck holdings without periodic polling or signing.
+
+The working **Policy Builder** provides amount/increase caps, finite expiry, validity windows, trusted-state requirement and expected channel controls. It uses the core policy schema, previews/copies/downloads JSON and applies only the policy to the free playground while preserving signed bytes, signature and supplied state. Standard/Conservative presets are editable examples, not security guarantees. Batch Verification and Advanced Reports are explicitly planned and unimplemented.
+
+Configure public build variables `VITE_VG_TOKEN_MINT`, `VITE_VG_RPC_URL`, `VITE_VG_HOLDER_THRESHOLD` and `VITE_VG_NETWORK` after independently confirming the official mint. The manual Pages workflow accepts matching repository variables `VG_TOKEN_MINT`, `VG_RPC_URL`, `VG_HOLDER_THRESHOLD` and `VG_NETWORK`. No mint variable means no holder access. See [configuration, activation and test procedure](docs/pro.md).
+
+**Client-side gating is bypassable.** Bundled JavaScript cannot protect secrets, privileged APIs or exclusive IP. The gate is a convenience feature, not cryptographic wallet authentication or a settlement/security guarantee. Tests provide injected wallet/RPC fixtures outside production code; no development bypass is shipped.
 
 ## Results and security boundaries
 
