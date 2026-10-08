@@ -1,0 +1,8 @@
+{
+  "expectedChannelId": {
+    "encoding": "hex",
+    "value": "0707070707070707070707070707070707070707070707070707070707070707"
+  },
+  "maxCumulativeAmount": "1000",
+  "rejectNonExpiring": true
+}
