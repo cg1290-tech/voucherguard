@@ -1,0 +1,24 @@
+name: Verification CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm fixtures
+      - run: git diff --exit-code -- examples/valid.json examples/signature.json examples/expired.json examples/amount.json examples/channel.json examples/stale.json examples/state.json apps/web/src/fixtures.json
+      - run: pnpm check
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:browser
