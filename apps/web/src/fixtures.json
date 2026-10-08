@@ -1,0 +1,290 @@
+[
+  {
+    "id": "valid",
+    "name": "Valid payment voucher",
+    "expected": "PASS",
+    "detail": "A genuine test signature, matching channel, deposit and advancing watermark.",
+    "document": {
+      "protocol": "solana-payment-channels/v1",
+      "message": {
+        "encoding": "hex",
+        "value": "56010707070707070707070707070707070707070707070707070707070707070707f4010000000000000094357700000000"
+      },
+      "signature": {
+        "encoding": "hex",
+        "value": "c96d64c8c366c4cb6019f7c77d244cf8f30f4b56c8198d89deaa7f7de3620bcaa32c8648a16142df4f14855ea1e643da633b40c24cab5442eb382cccc03f7b0e"
+      },
+      "authorizedSigner": {
+        "encoding": "hex",
+        "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+      },
+      "now": "1900000000",
+      "policy": {
+        "expectedChannelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "maxCumulativeAmount": "1000",
+        "rejectNonExpiring": true
+      },
+      "trustedState": {
+        "channelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "authorizedSigner": {
+          "encoding": "hex",
+          "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+        },
+        "deposit": "2000",
+        "settledAmount": "100",
+        "status": "Open"
+      }
+    }
+  },
+  {
+    "id": "signature",
+    "name": "Invalid signature",
+    "expected": "FAIL",
+    "detail": "The amount byte was modified after signing. Cryptographic verification fails.",
+    "document": {
+      "protocol": "solana-payment-channels/v1",
+      "message": {
+        "encoding": "hex",
+        "value": "56010707070707070707070707070707070707070707070707070707070707070707f5010000000000000094357700000000"
+      },
+      "signature": {
+        "encoding": "hex",
+        "value": "c96d64c8c366c4cb6019f7c77d244cf8f30f4b56c8198d89deaa7f7de3620bcaa32c8648a16142df4f14855ea1e643da633b40c24cab5442eb382cccc03f7b0e"
+      },
+      "authorizedSigner": {
+        "encoding": "hex",
+        "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+      },
+      "now": "1900000000",
+      "policy": {
+        "expectedChannelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "maxCumulativeAmount": "1000",
+        "rejectNonExpiring": true
+      },
+      "trustedState": {
+        "channelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "authorizedSigner": {
+          "encoding": "hex",
+          "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+        },
+        "deposit": "2000",
+        "settledAmount": "100",
+        "status": "Open"
+      }
+    }
+  },
+  {
+    "id": "expired",
+    "name": "Expired voucher",
+    "expected": "FAIL",
+    "detail": "A genuine signature cannot make an expired authorization fresh.",
+    "document": {
+      "protocol": "solana-payment-channels/v1",
+      "message": {
+        "encoding": "hex",
+        "value": "56010707070707070707070707070707070707070707070707070707070707070707f40100000000000000d2496b00000000"
+      },
+      "signature": {
+        "encoding": "hex",
+        "value": "09befc99b1b3722884413bc4c6f39e0e7cb886c83272a52361245511a61262b769915fca5618812b7c4f8d4db1a2e11aa38eb06bf7232100e40dd8cf8911fc08"
+      },
+      "authorizedSigner": {
+        "encoding": "hex",
+        "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+      },
+      "now": "1900000000",
+      "policy": {
+        "expectedChannelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "maxCumulativeAmount": "1000",
+        "rejectNonExpiring": true
+      },
+      "trustedState": {
+        "channelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "authorizedSigner": {
+          "encoding": "hex",
+          "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+        },
+        "deposit": "2000",
+        "settledAmount": "100",
+        "status": "Open"
+      }
+    }
+  },
+  {
+    "id": "amount",
+    "name": "Unauthorized amount",
+    "expected": "FAIL",
+    "detail": "A correctly signed amount of 1500 exceeds the application limit of 1000.",
+    "document": {
+      "protocol": "solana-payment-channels/v1",
+      "message": {
+        "encoding": "hex",
+        "value": "56010707070707070707070707070707070707070707070707070707070707070707dc050000000000000094357700000000"
+      },
+      "signature": {
+        "encoding": "hex",
+        "value": "82c1a5f4baad04df29e04f82ba02cfb2607067e585ddcbbe0847a542e7ed4500c18317ec416ddc1cfeb0f6c5e14818881636b357fa48fb9eec0fc889f53ac700"
+      },
+      "authorizedSigner": {
+        "encoding": "hex",
+        "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+      },
+      "now": "1900000000",
+      "policy": {
+        "expectedChannelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "maxCumulativeAmount": "1000",
+        "rejectNonExpiring": true
+      },
+      "trustedState": {
+        "channelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "authorizedSigner": {
+          "encoding": "hex",
+          "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+        },
+        "deposit": "2000",
+        "settledAmount": "100",
+        "status": "Open"
+      }
+    }
+  },
+  {
+    "id": "channel",
+    "name": "Wrong channel",
+    "expected": "FAIL",
+    "detail": "The independently expected channel differs from the signed channel.",
+    "document": {
+      "protocol": "solana-payment-channels/v1",
+      "message": {
+        "encoding": "hex",
+        "value": "56010707070707070707070707070707070707070707070707070707070707070707f4010000000000000094357700000000"
+      },
+      "signature": {
+        "encoding": "hex",
+        "value": "c96d64c8c366c4cb6019f7c77d244cf8f30f4b56c8198d89deaa7f7de3620bcaa32c8648a16142df4f14855ea1e643da633b40c24cab5442eb382cccc03f7b0e"
+      },
+      "authorizedSigner": {
+        "encoding": "hex",
+        "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+      },
+      "now": "1900000000",
+      "policy": {
+        "expectedChannelId": {
+          "encoding": "hex",
+          "value": "0909090909090909090909090909090909090909090909090909090909090909"
+        },
+        "maxCumulativeAmount": "1000",
+        "rejectNonExpiring": true
+      },
+      "trustedState": {
+        "channelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "authorizedSigner": {
+          "encoding": "hex",
+          "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+        },
+        "deposit": "2000",
+        "settledAmount": "100",
+        "status": "Open"
+      }
+    }
+  },
+  {
+    "id": "stale",
+    "name": "Stale authorization",
+    "expected": "FAIL",
+    "detail": "Cumulative amount equals the supplied settled watermark; strict advancement fails.",
+    "document": {
+      "protocol": "solana-payment-channels/v1",
+      "message": {
+        "encoding": "hex",
+        "value": "56010707070707070707070707070707070707070707070707070707070707070707f4010000000000000094357700000000"
+      },
+      "signature": {
+        "encoding": "hex",
+        "value": "c96d64c8c366c4cb6019f7c77d244cf8f30f4b56c8198d89deaa7f7de3620bcaa32c8648a16142df4f14855ea1e643da633b40c24cab5442eb382cccc03f7b0e"
+      },
+      "authorizedSigner": {
+        "encoding": "hex",
+        "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+      },
+      "now": "1900000000",
+      "policy": {
+        "expectedChannelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "maxCumulativeAmount": "1000",
+        "rejectNonExpiring": true
+      },
+      "trustedState": {
+        "channelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "authorizedSigner": {
+          "encoding": "hex",
+          "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+        },
+        "deposit": "2000",
+        "settledAmount": "500",
+        "status": "Open"
+      }
+    }
+  },
+  {
+    "id": "state",
+    "name": "Insufficient state",
+    "expected": "INDETERMINATE",
+    "detail": "Signature is valid, but required deposit, lifecycle and freshness state is absent.",
+    "document": {
+      "protocol": "solana-payment-channels/v1",
+      "message": {
+        "encoding": "hex",
+        "value": "56010707070707070707070707070707070707070707070707070707070707070707f4010000000000000094357700000000"
+      },
+      "signature": {
+        "encoding": "hex",
+        "value": "c96d64c8c366c4cb6019f7c77d244cf8f30f4b56c8198d89deaa7f7de3620bcaa32c8648a16142df4f14855ea1e643da633b40c24cab5442eb382cccc03f7b0e"
+      },
+      "authorizedSigner": {
+        "encoding": "hex",
+        "value": "197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61"
+      },
+      "now": "1900000000",
+      "policy": {
+        "expectedChannelId": {
+          "encoding": "hex",
+          "value": "0707070707070707070707070707070707070707070707070707070707070707"
+        },
+        "maxCumulativeAmount": "1000",
+        "rejectNonExpiring": true
+      }
+    }
+  }
+]
