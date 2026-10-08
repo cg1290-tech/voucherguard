@@ -20,7 +20,7 @@ test("production site under a Pages subpath: scenarios, equivalent reports, offl
   page.on("pageerror", (e) => errors.push(e.message));
   const externalRequests: string[] = [];
   page.on("request", (r) => {
-    if (!r.url().startsWith("http://127.0.0.1:4173/"))
+    if (!r.url().startsWith("http://127.0.0.1:4183/"))
       externalRequests.push(r.url());
   });
   await page.goto("./");
@@ -54,7 +54,10 @@ test("production site under a Pages subpath: scenarios, equivalent reports, offl
   expect((await textDownload).suggestedFilename()).toBe(
     "voucherguard-report.txt",
   );
-  await page.getByLabel("Maximum cumulative amount").fill("499");
+  await page
+    .locator("#playground")
+    .getByLabel("Maximum cumulative amount")
+    .fill("499");
   await expect(page.getByTestId("status")).toHaveCount(0);
   await page.getByRole("button", { name: "Verify locally" }).click();
   await expect(page.getByTestId("status")).toHaveText("FAIL");
@@ -87,4 +90,45 @@ test("mobile layout, keyboard access and missing signer never passes", async ({
   await page.getByRole("button", { name: "Verify locally" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByTestId("status")).toHaveText("INDETERMINATE");
+});
+
+test("default production Pro stays locked with an unset mint and has no test bypass", async ({
+  page,
+}) => {
+  const posts: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() === "POST") posts.push(r.url());
+  });
+  const { installWallet } = await import("./pro.browser-support");
+  await installWallet(page);
+  await page.goto("./");
+  await page
+    .locator("#pro")
+    .getByRole("button", { name: "Connect wallet", exact: true })
+    .click();
+  await expect(page.getByTestId("pro-access-status")).toHaveText(
+    "Token access coming soon",
+  );
+  await expect(page.getByTestId("policy-builder")).toBeHidden();
+  await page.getByRole("button", { name: /Valid payment voucher/ }).click();
+  await page.getByRole("button", { name: "Verify locally" }).click();
+  await expect(page.getByTestId("status")).toHaveText("PASS");
+  const { readdirSync, readFileSync } = await import("node:fs");
+  const files = readdirSync("apps/web/dist/assets").filter((f) =>
+    f.endsWith(".js"),
+  );
+  const bundle = files
+    .map((f) => readFileSync(`apps/web/dist/assets/${f}`, "utf8"))
+    .join("");
+  expect(bundle).not.toContain("VoucherGuard Browser Test Wallet");
+  expect(bundle).not.toContain("vg-test-control");
+  expect(bundle).not.toContain("voucherguard-rpc.example.test");
+  expect(posts).toEqual([]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page.locator("#pro").screenshot({ path: "docs/pro-coming-soon.png" });
 });

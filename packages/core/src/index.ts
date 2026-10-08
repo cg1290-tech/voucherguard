@@ -584,6 +584,51 @@ function encoded(v: unknown, size: number): Uint8Array {
     invalid("Expected {encoding: hex|base64|base58, value: string}");
   return decodeBytes(o.value, o.encoding as Encoding, size);
 }
+/** JSON representation of the existing application policy schema. */
+export interface PolicyDocument {
+  expectedChannelId?: { encoding: Encoding; value: string };
+  maxCumulativeAmount?: string;
+  maxIncrease?: string;
+  rejectNonExpiring?: boolean;
+  minRemainingSeconds?: string;
+  maxRemainingSeconds?: string;
+  requireState?: boolean;
+}
+/** Validate a standalone policy without manufacturing a voucher or invoking crypto. */
+export function parsePolicyDocument(value: unknown): Policy {
+  const p = object(value, "policy");
+  keys(
+    p,
+    [
+      "expectedChannelId",
+      "maxCumulativeAmount",
+      "maxIncrease",
+      "rejectNonExpiring",
+      "minRemainingSeconds",
+      "maxRemainingSeconds",
+      "requireState",
+    ],
+    "policy",
+  );
+  const policy: Policy = {};
+  if (p.expectedChannelId !== undefined)
+    policy.expectedChannelId = encoded(p.expectedChannelId, 32);
+  for (const k of [
+    "maxCumulativeAmount",
+    "maxIncrease",
+    "minRemainingSeconds",
+    "maxRemainingSeconds",
+  ] as const)
+    if (p[k] !== undefined) policy[k] = decimal(p[k], k);
+  for (const k of ["rejectNonExpiring", "requireState"] as const)
+    if (p[k] !== undefined) {
+      if (typeof p[k] !== "boolean") invalid(`${k} must be boolean`);
+      policy[k] = p[k];
+    }
+  validatePolicy(policy);
+  return policy;
+}
+
 /** Strict JSON adapter shared by CLI and browser. File assertions are not trust evidence. */
 export function parseVoucherDocument(value: unknown): VerifyInput {
   const o = object(value, "document");
@@ -611,39 +656,7 @@ export function parseVoucherDocument(value: unknown): VerifyInput {
   if (o.authorizedSigner !== undefined)
     input.authorizedSigner = encoded(o.authorizedSigner, 32);
   if (o.now !== undefined) input.now = decimal(o.now, "now");
-  if (o.policy !== undefined) {
-    const p = object(o.policy, "policy");
-    keys(
-      p,
-      [
-        "expectedChannelId",
-        "maxCumulativeAmount",
-        "maxIncrease",
-        "rejectNonExpiring",
-        "minRemainingSeconds",
-        "maxRemainingSeconds",
-        "requireState",
-      ],
-      "policy",
-    );
-    const policy: Policy = {};
-    if (p.expectedChannelId !== undefined)
-      policy.expectedChannelId = encoded(p.expectedChannelId, 32);
-    for (const k of [
-      "maxCumulativeAmount",
-      "maxIncrease",
-      "minRemainingSeconds",
-      "maxRemainingSeconds",
-    ] as const)
-      if (p[k] !== undefined) policy[k] = decimal(p[k], k);
-    for (const k of ["rejectNonExpiring", "requireState"] as const)
-      if (p[k] !== undefined) {
-        if (typeof p[k] !== "boolean") invalid(`${k} must be boolean`);
-        policy[k] = p[k];
-      }
-    validatePolicy(policy);
-    input.policy = policy;
-  }
+  if (o.policy !== undefined) input.policy = parsePolicyDocument(o.policy);
   if (o.trustedState !== undefined) {
     const s = object(o.trustedState, "trustedState");
     keys(
