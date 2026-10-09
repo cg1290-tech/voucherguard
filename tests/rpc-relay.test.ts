@@ -4,17 +4,32 @@ import { createRpcRelay } from "../apps/web/src/rpc-worker";
 const env = {
   ASSETS: { fetch: async () => new Response("asset") },
 };
-const request = (body: unknown, origin = "https://voucherguard.pages.dev") =>
+const request = (
+  body: unknown,
+  origin = "https://voucherguard.pages.dev",
+  extra: Record<string, string> = { "Sec-Fetch-Site": "same-origin" },
+) =>
   new Request("https://voucherguard.pages.dev/api/solana-rpc", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Origin: origin,
+      ...(origin ? { Origin: origin } : {}),
       Cookie: "secret=never-forward",
+      ...extra,
     },
     body: JSON.stringify(body),
   });
 const genesis = { jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: [] };
+const tokenAccounts = {
+  jsonrpc: "2.0",
+  id: 1,
+  method: "getTokenAccountsByOwner",
+  params: [
+    "4kDBsQmi8VdLJaAEdG1J2yYpMen2Yyea6UFADDqdpbQT",
+    { mint: "zSUVXjYGMTwqSCgQ9GNiji2sBHFvYjB9U836chbpump" },
+    { minContextSlot: 0 },
+  ],
+};
 describe("read-only Pages RPC relay", () => {
   it("forwards only canonical read requests to the fixed upstream without browser credentials", async () => {
     const fetcher = vi.fn(
@@ -90,12 +105,20 @@ describe("read-only Pages RPC relay", () => {
       }),
     );
   });
-  it("rejects other origins", async () => {
+  it("rejects other origins and missing Origin", async () => {
     const fetcher = vi.fn() as unknown as typeof fetch;
     expect(
       (
         await createRpcRelay(fetcher).fetch(
           request(genesis, "https://attacker.test"),
+          env,
+        )
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await createRpcRelay(fetcher).fetch(
+          request(genesis, "", { "Sec-Fetch-Site": "same-origin" }),
           env,
         )
       ).status,
@@ -168,7 +191,23 @@ describe("read-only Pages RPC relay", () => {
     expect(response.status).toBe(200);
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
-  it("prefers Helius when HELIUS_API_KEY is configured on the Worker env", async () => {
+  it("uses Helius first only for indexed token-account reads", async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({ jsonrpc: "2.0", id: 1, result: { value: [] } }),
+        ),
+    ) as unknown as typeof fetch;
+    await createRpcRelay(fetcher).fetch(request(tokenAccounts), {
+      ...env,
+      HELIUS_API_KEY: "test-key",
+    });
+    expect(fetcher).toHaveBeenCalledWith(
+      "https://mainnet.helius-rpc.com/?api-key=test-key",
+      expect.any(Object),
+    );
+  });
+  it("keeps free RPCs ahead of Helius for genesis and transactions", async () => {
     const fetcher = vi.fn(
       async () =>
         new Response(
@@ -180,18 +219,40 @@ describe("read-only Pages RPC relay", () => {
       HELIUS_API_KEY: "test-key",
     });
     expect(fetcher).toHaveBeenCalledWith(
-      "https://mainnet.helius-rpc.com/?api-key=test-key",
+      "https://api.mainnet-beta.solana.com",
       expect.any(Object),
     );
+    expect(fetcher).not.toHaveBeenCalledWith(
+      expect.stringContaining("helius"),
+      expect.anything(),
+    );
   });
-  it("caps per-isolate requests and does not forward excess", async () => {
+  it("caps browser clients higher than non-browser clients", async () => {
     const fetcher = vi.fn(
       async () => new Response("{}"),
     ) as unknown as typeof fetch;
     const worker = createRpcRelay(fetcher);
-    for (let i = 0; i < 30; i++)
+    for (let i = 0; i < 20; i++)
       expect((await worker.fetch(request(genesis), env)).status).toBe(200);
     expect((await worker.fetch(request(genesis), env)).status).toBe(429);
-    expect(fetcher).toHaveBeenCalledTimes(30);
+
+    const worker2 = createRpcRelay(fetcher);
+    for (let i = 0; i < 5; i++)
+      expect(
+        (
+          await worker2.fetch(
+            request(genesis, "https://voucherguard.pages.dev", {}),
+            env,
+          )
+        ).status,
+      ).toBe(200);
+    expect(
+      (
+        await worker2.fetch(
+          request(genesis, "https://voucherguard.pages.dev", {}),
+          env,
+        )
+      ).status,
+    ).toBe(429);
   });
 });

@@ -5,6 +5,10 @@ const FALLBACK_UPSTREAMS = [
 ] as const;
 const MAX_BODY = 4096;
 const MAX_RESPONSE = 1024 * 1024;
+/** Indexed SPL reads often fail on free public RPCs; prefer Helius only for these. */
+const HELIUS_FIRST = new Set(["getTokenAccountsByOwner"]);
+const BROWSER_LIMIT = 20;
+const NON_BROWSER_LIMIT = 5;
 const ORIGINS = new Set([
   "https://voucherguard.pages.dev",
   "https://cg1290-tech.github.io",
@@ -14,15 +18,27 @@ const key = (v: unknown): v is string =>
   typeof v === "string" && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v);
 const obj = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === "object" && !Array.isArray(v);
-function upstreams(env: { HELIUS_API_KEY?: string }): string[] {
+
+/** Free RPCs first by default; Helius only leads for indexed token account reads. */
+export function upstreamsForMethod(
+  method: string,
+  env: { HELIUS_API_KEY?: string },
+): string[] {
   const helius = env.HELIUS_API_KEY?.trim();
-  if (helius)
-    return [
-      `https://mainnet.helius-rpc.com/?api-key=${helius}`,
-      ...FALLBACK_UPSTREAMS,
-    ];
-  return [...FALLBACK_UPSTREAMS];
+  if (!helius) return [...FALLBACK_UPSTREAMS];
+  const url = `https://mainnet.helius-rpc.com/?api-key=${helius}`;
+  if (HELIUS_FIRST.has(method)) return [url, ...FALLBACK_UPSTREAMS];
+  return [...FALLBACK_UPSTREAMS, url];
 }
+
+function looksLikeBrowser(request: Request): boolean {
+  const site = request.headers.get("Sec-Fetch-Site");
+  if (!site) return false;
+  return (
+    site === "same-origin" || site === "same-site" || site === "cross-site"
+  );
+}
+
 async function boundedBytes(
   body: ReadableStream<Uint8Array> | null,
   max: number,
@@ -75,9 +91,11 @@ export function createRpcRelay(fetcher: typeof fetch = fetch) {
       });
       const reply = (status: number, message: string) =>
         new Response(JSON.stringify({ error: message }), { status, headers });
-      if (origin && !ORIGINS.has(origin))
+      // Require an allowlisted Origin. Spoofable by non-browsers, but blocks
+      // anonymous probes and pairs with Sec-Fetch rate tiers below.
+      if (!origin || !ORIGINS.has(origin))
         return reply(403, "Origin not allowed");
-      if (origin) headers.set("Access-Control-Allow-Origin", origin);
+      headers.set("Access-Control-Allow-Origin", origin);
       if (request.method === "OPTIONS") {
         headers.set("Access-Control-Allow-Methods", "POST");
         headers.set("Access-Control-Allow-Headers", "Content-Type");
@@ -88,12 +106,14 @@ export function createRpcRelay(fetcher: typeof fetch = fetch) {
         !request.headers.get("Content-Type")?.startsWith("application/json")
       )
         return reply(405, "JSON POST required");
+      const browser = looksLikeBrowser(request);
+      const limit = browser ? BROWSER_LIMIT : NON_BROWSER_LIMIT;
       const ip = request.headers.get("CF-Connecting-IP") || "local";
       const now = Date.now();
       for (const [address, entry] of requests)
         if (now - entry.start >= 60000) requests.delete(address);
       const bucket = requests.get(ip) || { start: now, count: 0 };
-      if (bucket.count >= 30 || (!requests.has(ip) && requests.size >= 4096))
+      if (bucket.count >= limit || (!requests.has(ip) && requests.size >= 4096))
         return reply(429, "Try again later");
       bucket.count++;
       requests.set(ip, bucket);
@@ -173,8 +193,9 @@ export function createRpcRelay(fetcher: typeof fetch = fetch) {
       const timer = setTimeout(() => controller.abort(), 8000);
       try {
         let lastStatus = 0;
+        const method = String(rpc.method);
         // Workers only allow redirect "follow" | "manual". "error" throws at the edge.
-        for (const upstream of upstreams(env)) {
+        for (const upstream of upstreamsForMethod(method, env)) {
           let response: Response;
           try {
             response = await fetcher(upstream, {
