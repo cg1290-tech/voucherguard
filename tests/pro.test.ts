@@ -16,6 +16,8 @@ import {
 import {
   aggregateTokenAccounts,
   checkEligibility,
+  MAX_RPC_RESPONSE_BYTES,
+  MAX_TOKEN_ACCOUNTS,
   SolanaOwnershipReader,
 } from "../apps/web/src/pro/eligibility";
 import {
@@ -390,6 +392,59 @@ describe("mainnet SPL token ownership inspection", () => {
           TEST_CONFIG,
           account(),
           new SolanaOwnershipReader(fetcher),
+          signal(),
+        )
+      ).status,
+    ).toBe("rpc-error");
+  });
+  it("oversized streamed RPC responses without a length header are canceled and stay locked", async () => {
+    const cancel = vi.fn();
+    const fetcher: typeof fetch = async () =>
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.enqueue(new Uint8Array(MAX_RPC_RESPONSE_BYTES));
+            controller.enqueue(new Uint8Array(1));
+          },
+          cancel,
+        }),
+      );
+    const result = await checkEligibility(
+      TEST_CONFIG,
+      account(),
+      new SolanaOwnershipReader(fetcher),
+      signal(),
+    );
+    expect(result.status).toBe("rpc-error");
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+  it("oversized declared RPC responses are rejected before consumption", async () => {
+    const cancel = vi.fn();
+    const fetcher: typeof fetch = async () =>
+      new Response(new ReadableStream({ cancel }), {
+        headers: { "Content-Length": String(MAX_RPC_RESPONSE_BYTES + 1) },
+      });
+    expect(
+      (
+        await checkEligibility(
+          TEST_CONFIG,
+          account(),
+          new SolanaOwnershipReader(fetcher),
+          signal(),
+        )
+      ).status,
+    ).toBe("rpc-error");
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+  it("an RPC token-account list beyond the limit cannot unlock", async () => {
+    expect(
+      (
+        await checkEligibility(
+          TEST_CONFIG,
+          account(),
+          reader({
+            accounts: tokens(Array(MAX_TOKEN_ACCOUNTS + 1).fill(tokenEntry())),
+          }),
           signal(),
         )
       ).status,
