@@ -9,6 +9,7 @@ import {
   type ProSessionState,
   requestChallenge,
 } from "./pro-session";
+import { RobinhoodWallet } from "./RobinhoodWallet";
 import { WalletController } from "./wallet";
 import "./pro.css";
 
@@ -102,7 +103,11 @@ export function Pro() {
           <p className="eyebrow">VOUCHERGUARD PRO / HOLDER TOOLKIT</p>
           <h2 id="pro-title">Your policies. Your guardrails.</h2>
         </div>
-        <span className="pro-network">SOLANA MAINNET-BETA</span>
+        <span className="pro-network">
+          {session.network === "robinhood"
+            ? "ROBINHOOD CHAIN"
+            : "SOLANA MAINNET-BETA"}
+        </span>
       </div>
       <p className="pro-intro">
         Policy Builder is served only after the Pages Worker verifies on-chain
@@ -139,132 +144,152 @@ export function Pro() {
               )}
             </p>
           )}
-          {session.mint && (
+          {session.blockNumber && (
             <p className="small muted">
-              Configured mint: <code className="pro-mint">{session.mint}</code>
+              Observed at block {session.blockNumber}
+            </p>
+          )}
+          {(session.contract || session.mint) && (
+            <p className="small muted">
+              Configured token:{" "}
+              <code className="pro-mint">
+                {session.contract || session.mint}
+              </code>
             </p>
           )}
         </div>
         <div className="pro-wallet">
-          <h3>Holder verification</h3>
-          <p className="small muted">
-            Connect a wallet, then sign a one-time Pro challenge. The Worker
-            checks your $VG balance on Solana before issuing an HttpOnly
-            session. No transaction is submitted.
-          </p>
-          {wallet.account ? (
+          {session.network === "robinhood" ? (
+            <RobinhoodWallet
+              session={session}
+              onSession={setSession}
+              onRefresh={() => refresh()}
+            />
+          ) : (
             <>
-              <p className="pro-wallet-address">
-                {wallet.wallet?.name} ·{" "}
-                <code title={wallet.account.address}>
-                  {wallet.account.address.slice(0, 8)}…
-                  {wallet.account.address.slice(-8)}
-                </code>
+              <h3>Holder verification</h3>
+              <p className="small muted">
+                Connect a wallet, then sign a one-time Pro challenge. The Worker
+                checks your $VG balance on Solana before issuing an HttpOnly
+                session. No transaction is submitted.
               </p>
-              {wallet.accounts.length > 1 && (
-                <label className="pro-select">
-                  Wallet account
-                  <select
-                    value={wallet.account.address}
-                    onChange={(e) => controller.selectAccount(e.target.value)}
-                  >
-                    {wallet.accounts.map((a) => (
-                      <option key={a.address} value={a.address}>
-                        {a.label || a.address}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              <div className="pro-wallet-actions">
-                {!eligible && session.status !== "not-configured" && (
+              {wallet.account ? (
+                <>
+                  <p className="pro-wallet-address">
+                    {wallet.wallet?.name} ·{" "}
+                    <code title={wallet.account.address}>
+                      {wallet.account.address.slice(0, 8)}…
+                      {wallet.account.address.slice(-8)}
+                    </code>
+                  </p>
+                  {wallet.accounts.length > 1 && (
+                    <label className="pro-select">
+                      Wallet account
+                      <select
+                        value={wallet.account.address}
+                        onChange={(e) =>
+                          controller.selectAccount(e.target.value)
+                        }
+                      >
+                        {wallet.accounts.map((a) => (
+                          <option key={a.address} value={a.address}>
+                            {a.label || a.address}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  <div className="pro-wallet-actions">
+                    {!eligible && session.status !== "not-configured" && (
+                      <button
+                        type="button"
+                        className="primary"
+                        disabled={busy || wallet.connecting}
+                        onClick={() => void proveHoldings()}
+                      >
+                        {busy ? "Verifying…" : "Prove holdings"}
+                      </button>
+                    )}
+                    {eligible && (
+                      <a className="button primary" href={toolsHref}>
+                        Open Policy Builder
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void refresh()}
+                      disabled={busy}
+                    >
+                      Refresh
+                    </button>
+                    {eligible && (
+                      <button
+                        type="button"
+                        onClick={() => void logout()}
+                        disabled={busy}
+                      >
+                        End Pro session
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void controller.disconnect()}
+                    >
+                      Disconnect wallet
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {eligible && (
+                    <div className="pro-wallet-actions">
+                      <a className="button primary" href={toolsHref}>
+                        Open Policy Builder
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => void logout()}
+                        disabled={busy}
+                      >
+                        End Pro session
+                      </button>
+                    </div>
+                  )}
+                  <label className="pro-select">
+                    Solana wallet
+                    <select
+                      value={selected?.name ?? ""}
+                      disabled={!wallet.wallets.length || wallet.connecting}
+                      onChange={(e) => setChoice(e.target.value)}
+                    >
+                      {!wallet.wallets.length && (
+                        <option value="">No compatible wallet detected</option>
+                      )}
+                      {wallet.wallets.map((w) => (
+                        <option key={w.name} value={w.name}>
+                          {w.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <button
                     type="button"
                     className="primary"
-                    disabled={busy || wallet.connecting}
-                    onClick={() => void proveHoldings()}
+                    disabled={!selected || wallet.connecting || eligible}
+                    onClick={() => {
+                      if (selected) void controller.connect(selected);
+                    }}
                   >
-                    {busy ? "Verifying…" : "Prove holdings"}
+                    {wallet.connecting ? "Connecting…" : "Connect wallet"}
                   </button>
-                )}
-                {eligible && (
-                  <a className="button primary" href={toolsHref}>
-                    Open Policy Builder
-                  </a>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void refresh()}
-                  disabled={busy}
-                >
-                  Refresh
-                </button>
-                {eligible && (
-                  <button
-                    type="button"
-                    onClick={() => void logout()}
-                    disabled={busy}
-                  >
-                    End Pro session
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void controller.disconnect()}
-                >
-                  Disconnect wallet
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              {eligible && (
-                <div className="pro-wallet-actions">
-                  <a className="button primary" href={toolsHref}>
-                    Open Policy Builder
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => void logout()}
-                    disabled={busy}
-                  >
-                    End Pro session
-                  </button>
-                </div>
+                </>
               )}
-              <label className="pro-select">
-                Solana wallet
-                <select
-                  value={selected?.name ?? ""}
-                  disabled={!wallet.wallets.length || wallet.connecting}
-                  onChange={(e) => setChoice(e.target.value)}
-                >
-                  {!wallet.wallets.length && (
-                    <option value="">No compatible wallet detected</option>
-                  )}
-                  {wallet.wallets.map((w) => (
-                    <option key={w.name} value={w.name}>
-                      {w.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                type="button"
-                className="primary"
-                disabled={!selected || wallet.connecting || eligible}
-                onClick={() => {
-                  if (selected) void controller.connect(selected);
-                }}
-              >
-                {wallet.connecting ? "Connecting…" : "Connect wallet"}
-              </button>
+              {wallet.error && (
+                <p className="pro-wallet-error" role="alert">
+                  {wallet.error}
+                </p>
+              )}
             </>
-          )}
-          {wallet.error && (
-            <p className="pro-wallet-error" role="alert">
-              {wallet.error}
-            </p>
           )}
         </div>
       </div>
@@ -285,7 +310,7 @@ export function Pro() {
       )}
       <p className="pro-boundary">
         Hosted Pro access is enforced by the Cloudflare Pages Worker: a signed
-        challenge plus live SPL balance against the configured mint. Client UI
+        challenge plus live token balance on the configured chain. Client UI
         alone cannot issue a session. Open-source forks are outside this hosted
         gate.
       </p>
