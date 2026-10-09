@@ -149,7 +149,7 @@ test("eligible policy builder validates, copies, downloads and applies without a
     .fill("300");
   await expect(builder.getByRole("alert")).toContainText("inverted");
   await expect(
-    builder.getByRole("button", { name: "Apply to playground" }),
+    builder.getByRole("button", { name: "Apply to Advanced" }),
   ).toBeDisabled();
   await builder
     .getByLabel("Minimum remaining validity / seconds", { exact: true })
@@ -175,7 +175,7 @@ test("eligible policy builder validates, copies, downloads and applies without a
     "499",
   );
   await builder
-    .getByRole("button", { name: "Apply to playground", exact: true })
+    .getByRole("button", { name: "Apply to Advanced", exact: true })
     .click();
   await expect(builder.getByRole("status")).toContainText("preserved");
   const applied = JSON.parse(
