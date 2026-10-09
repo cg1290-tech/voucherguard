@@ -15,6 +15,7 @@ import "./style.css";
 import { Pro } from "./pro/Pro";
 import { loadProConfig, validateConfig } from "./pro/config";
 import { applyPolicyToDocument } from "./pro/policy";
+import { QuickCheck } from "./quick/QuickCheck";
 
 const repository = import.meta.env.VITE_REPOSITORY_URL as string | undefined;
 const proSetup = validateConfig(loadProConfig());
@@ -127,8 +128,8 @@ function App() {
   const scenario = scenarios.find((s) => s.id === selected);
   return (
     <>
-      <a className="skip" href="#playground">
-        Skip to playground
+      <a className="skip" href="#quick-check">
+        Skip to Quick Check
       </a>
       <header>
         <a className="brand" href="#top">
@@ -144,8 +145,9 @@ function App() {
           </span>
         </a>
         <nav aria-label="Main">
+          <a href="#quick-check">Quick Check</a>
           <a href="#pro">Pro</a>
-          <a href="#playground">Playground</a>
+          <a href="#playground">Advanced</a>
           <a href="#documentation">Documentation</a>
           <a href="#scope">Security model</a>
           {repository && (
@@ -170,20 +172,20 @@ function App() {
               </span>
             </h1>
             <p className="lede">
-              Check signed payment vouchers before your application accepts
-              them. Free local verification today. A policy toolkit for future
-              $VG holders.
+              Paste a Solscan transaction or import a signed voucher. Verify
+              Payment Channels evidence in your browser. A policy toolkit for
+              future $VG holders.
             </p>
             <div className="actions">
-              <a className="primary" href="#playground">
-                Launch Playground <span aria-hidden="true">↗</span>
+              <a className="primary" href="#quick-check">
+                Quick Check <span aria-hidden="true">↗</span>
               </a>
               <a className="secondary" href="#pro">
                 Explore Pro →
               </a>
             </div>
             <p className="hero-note">
-              Free verifier: local execution · No wallet or RPC required
+              Free Quick Check · Advanced voucher lab · No custody
               {repository && (
                 <a className="source-link" href={repository}>
                   Open source · MIT · GitHub ↗
@@ -207,14 +209,14 @@ function App() {
               <br />
               Your policies next.
             </h2>
-            <a className="product-card" href="#playground">
+            <a className="product-card" href="#quick-check">
               <span className="small-label">FREE / AVAILABLE NOW</span>
               <strong>
-                Voucher verification <span aria-hidden="true">↗</span>
+                Quick Check <span aria-hidden="true">↗</span>
               </strong>
               <p>
-                Inspect signatures, channels, expiration and spending limits in
-                your browser.
+                Paste a Solscan URL or signature to inspect on-chain settlement
+                voucher evidence.
               </p>
             </a>
             <a className="product-card" href="#pro">
@@ -240,6 +242,7 @@ function App() {
             </p>
           </aside>
         </section>
+        <QuickCheck />
         <Pro onApply={applyProPolicy} />
         <section className="intro" id="scope">
           <h2>
@@ -256,21 +259,28 @@ function App() {
             </p>
             <p className="muted">
               Supports Solana Foundation payment channel V1 vouchers. This is
-              not a complete x402 verifier. The free verifier executes locally,
-              with no wallet connection or RPC. Pro uses a read-only wallet
-              connection and public Solana RPC to check holder eligibility.
-              Neither component executes payments or takes custody.
+              not a complete x402 verifier. Quick Check reads confirmed
+              transactions through a public RPC relay; Advanced Verification
+              runs offline on imported documents. Pro uses a read-only wallet
+              connection to check holder eligibility. Nothing here executes
+              payments or takes custody.
             </p>
           </div>
         </section>
         <section id="playground" className="playground">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">LOCAL VERIFICATION LAB</p>
+              <p className="eyebrow">ADVANCED VERIFICATION / FREE</p>
               <h2>Inspect the authorization.</h2>
             </div>
             <span className="simulation">SIMULATIONS / TEST KEYS ONLY</span>
           </div>
+          <p className="quick-intro">
+            Import or edit a signed voucher document, adjust policy and trusted
+            state, then run the full offline verifier. Prefer{" "}
+            <a href="#quick-check">Quick Check</a> when you already have a
+            settlement transaction.
+          </p>
           <div className="lab-layout">
             <aside className="scenario-list" aria-label="Security scenarios">
               <p className="small-label">CHOOSE A SCENARIO</p>
