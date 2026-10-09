@@ -40,6 +40,41 @@ export interface OwnershipReader {
   ): Promise<HoldingSnapshot>;
 }
 export class NetworkError extends Error {}
+export const MAX_RPC_RESPONSE_BYTES = 1024 * 1024;
+export const MAX_TOKEN_ACCOUNTS = 1024;
+
+async function boundedJson(response: Response): Promise<unknown> {
+  const declared = response.headers.get("Content-Length");
+  if (declared && Number(declared) > MAX_RPC_RESPONSE_BYTES) {
+    await response.body?.cancel();
+    throw new Error("RPC response exceeds the size limit.");
+  }
+  if (!response.body) throw new Error("RPC response body is missing.");
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_RPC_RESPONSE_BYTES) {
+        await reader.cancel();
+        throw new Error("RPC response exceeds the size limit.");
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+}
 function record(value: unknown, label: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw new Error(`Unavailable or malformed ${label}.`);
@@ -105,6 +140,8 @@ export function aggregateTokenAccounts(
     throw new Error(
       "Token account data is unavailable or older than the mint snapshot.",
     );
+  if (r.value.length > MAX_TOKEN_ACCOUNTS)
+    throw new Error("RPC returned too many token accounts.");
   const seen = new Set<string>();
   let balance = 0n;
   for (const value of r.value) {
@@ -174,7 +211,7 @@ export class SolanaOwnershipReader implements OwnershipReader {
         throw new Error(
           `RPC request failed (${response.status}). Refresh to retry.`,
         );
-      const doc = record(await response.json(), "JSON-RPC response");
+      const doc = record(await boundedJson(response), "JSON-RPC response");
       if (
         doc.jsonrpc !== "2.0" ||
         doc.id !== id ||
