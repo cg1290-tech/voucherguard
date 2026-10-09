@@ -143,6 +143,22 @@ export function createRpcRelay(fetcher: typeof fetch = fetch) {
               minContextSlot: params[2].minContextSlot,
             },
           ];
+        else if (
+          parsed.method === "getTransaction" &&
+          params.length === 2 &&
+          typeof params[0] === "string" &&
+          // Narrow base58 signature shape; client validates 64-byte decode.
+          /^[1-9A-HJ-NP-Za-km-z]{80,100}$/.test(params[0]) &&
+          obj(params[1])
+        )
+          canonical = [
+            params[0],
+            {
+              encoding: "json",
+              maxSupportedTransactionVersion: 0,
+              commitment: "confirmed",
+            },
+          ];
         else throw new Error("Method or parameters not allowed");
         rpc = {
           jsonrpc: "2.0",
