@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { type FormEvent, useState } from "react";
 import {
   type HistoricalTxReport,
   type QuickExtractResult,
@@ -99,7 +99,11 @@ export function QuickCheck() {
     }
   }
   return (
-    <section id="quick-check" className="quick-section" aria-labelledby="quick-title">
+    <section
+      id="quick-check"
+      className="quick-section"
+      aria-labelledby="quick-title"
+    >
       <div className="section-heading">
         <div>
           <p className="eyebrow">QUICK CHECK / FREE</p>
@@ -127,18 +131,25 @@ export function QuickCheck() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-        <button className="primary" type="submit" disabled={busy || !input.trim()}>
+        <button
+          className="primary"
+          type="submit"
+          disabled={busy || !input.trim()}
+        >
           {busy ? "Verifying…" : "Verify transaction"}
         </button>
       </form>
       <p className="small muted">
-        Or{" "}
-        <a href="#playground">upload / edit a signed voucher</a> in Advanced
+        Or <a href="#playground">upload / edit a signed voucher</a> in Advanced
         Verification.
       </p>
       {result?.kind === "historical" && <HistoricalView result={result} />}
       {result?.kind === "unsupported" && (
-        <p className="quick-empty" role="status" data-testid="quick-unsupported">
+        <p
+          className="quick-empty"
+          role="status"
+          data-testid="quick-unsupported"
+        >
           No supported payment voucher found. {result.message}
         </p>
       )}
