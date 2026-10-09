@@ -51,8 +51,8 @@ export function Pro({
           ? " Connect a read-only wallet to verify configured mint holdings and unlock Pro tools."
           : " Holder access activates after the official mint is configured."}{" "}
         Pro checks eligibility through a read-only wallet connection and public
-        Solana RPC. The verification playground stays free, with no wallet or
-        RPC required.
+        Solana RPC. Quick Check and Advanced Verification stay free; Advanced
+        needs no wallet.
       </p>
       <div className="pro-access">
         <div className="pro-access-copy">
@@ -185,7 +185,7 @@ export function Pro({
             <h3>Policy Builder</h3>
             <p>
               Set amount and time limits, generate validated JSON, and apply
-              your policy to the free playground.
+              your policy to Advanced Verification.
             </p>
             <span className="pro-tool-label">
               Locked until holdings are verified
