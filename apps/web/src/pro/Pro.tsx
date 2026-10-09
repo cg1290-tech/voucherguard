@@ -1,41 +1,100 @@
-import type { PolicyDocument } from "@voucherguard/core";
+import { encodeBytes } from "@voucherguard/core";
 import { getWallets } from "@wallet-standard/app";
-import { useState, useSyncExternalStore } from "react";
-import { formatTokenUnits, loadProConfig, validateConfig } from "./config";
-import { SolanaOwnershipReader } from "./eligibility";
-import { PolicyBuilder } from "./PolicyBuilder";
-import { useAccess } from "./useAccess";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { formatTokenUnits } from "./config";
+import {
+  createProSession,
+  fetchProStatus,
+  logoutProSession,
+  type ProSessionState,
+  requestChallenge,
+} from "./pro-session";
 import { WalletController } from "./wallet";
 import "./pro.css";
 
-const titles = {
+const titles: Record<ProSessionState["status"], string> = {
   "not-configured": "Token access coming soon",
-  disconnected: "Connect to check access",
+  locked: "Prove holdings to unlock",
   checking: "Checking access",
   eligible: "Pro unlocked",
   ineligible: "Holder threshold not met",
-  "unsupported-network": "Unsupported network",
   "rpc-error": "Access could not be verified",
-} as const;
-export function Pro({
-  onApply,
-}: {
-  onApply: (policy: PolicyDocument) => void;
-}) {
-  const [config] = useState(loadProConfig);
+  error: "Pro gate unavailable",
+};
+
+export function Pro() {
   const [controller] = useState(() => new WalletController(getWallets()));
-  const [reader] = useState(() => new SolanaOwnershipReader());
   const wallet = useSyncExternalStore(
     controller.subscribe,
     controller.getSnapshot,
     controller.getSnapshot,
   );
   const [choice, setChoice] = useState("");
-  const { result, refresh } = useAccess(config, wallet, reader);
+  const [session, setSession] = useState<ProSessionState>({
+    status: "checking",
+    message: "Checking Pro holder gate…",
+  });
+  const [busy, setBusy] = useState(false);
   const selected =
     wallet.wallets.find((w) => w.name === choice) ?? wallet.wallets[0];
-  const eligible = result.status === "eligible";
-  const setup = validateConfig(config);
+
+  const refresh = useCallback(async (signal?: AbortSignal) => {
+    try {
+      setSession(await fetchProStatus(signal));
+    } catch {
+      if (!signal?.aborted)
+        setSession({
+          status: "error",
+          message:
+            "Pro holder gate is unreachable. Use the Cloudflare Pages deployment.",
+        });
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void refresh(controller.signal);
+    return () => controller.abort();
+  }, [refresh]);
+
+  async function proveHoldings() {
+    if (!wallet.account) return;
+    setBusy(true);
+    try {
+      const challenge = await requestChallenge();
+      const signature = await controller.signMessage(
+        new TextEncoder().encode(challenge.message),
+      );
+      const next = await createProSession(
+        wallet.account.address,
+        challenge.challenge,
+        encodeBytes(signature, "base58"),
+      );
+      setSession(next);
+    } catch (e) {
+      setSession({
+        status: "error",
+        message:
+          e instanceof Error ? e.message : "Holder proof failed. Try again.",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function logout() {
+    setBusy(true);
+    try {
+      await logoutProSession();
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const eligible = session.status === "eligible";
+  const toolsHref = session.toolsPath || "/pro.html";
+
   return (
     <section id="pro" className="pro-section" aria-labelledby="pro-title">
       <div className="section-heading">
@@ -46,51 +105,52 @@ export function Pro({
         <span className="pro-network">SOLANA MAINNET-BETA</span>
       </div>
       <p className="pro-intro">
-        Build, export and apply verification policies with Policy Builder.
-        {setup.status === "ready"
-          ? " Connect a read-only wallet to verify configured mint holdings and unlock Pro tools."
-          : " Holder access activates after the official mint is configured."}{" "}
-        Pro checks eligibility through a read-only wallet connection and public
-        Solana RPC. Quick Check and Advanced Verification stay free; Advanced
-        needs no wallet.
+        Policy Builder is served only after the Pages Worker verifies on-chain
+        $VG holdings with a wallet signature. Quick Check and Advanced
+        Verification stay free and need no wallet.
       </p>
       <div className="pro-access">
         <div className="pro-access-copy">
           <span
-            className={`pro-state ${result.status}`}
+            className={`pro-state ${session.status}`}
             data-testid="pro-access-status"
           >
-            {titles[result.status]}
+            {titles[session.status]}
           </span>
-          <p role="status">{result.message}</p>
-          {result.balance !== undefined && result.decimals !== undefined && (
+          <p role="status">{session.message}</p>
+          {session.balance !== undefined && session.decimals !== undefined && (
             <p className="pro-balance">
               Holdings:{" "}
               <strong>
-                {formatTokenUnits(result.balance, result.decimals)} VG
-              </strong>{" "}
-              · Required: {config.threshold} VG
-              <span className="pro-slot">
-                Observed at confirmed slot {result.slot}
-              </span>
+                {formatTokenUnits(BigInt(session.balance), session.decimals)} VG
+              </strong>
+              {session.required !== undefined && (
+                <>
+                  {" "}
+                  · Required:{" "}
+                  {formatTokenUnits(BigInt(session.required), session.decimals)}{" "}
+                  VG
+                </>
+              )}
+              {session.slot !== undefined && (
+                <span className="pro-slot">
+                  Observed at confirmed slot {session.slot}
+                </span>
+              )}
             </p>
           )}
-          {setup.status === "ready" ? (
+          {session.mint && (
             <p className="small muted">
-              Configured mint: <code className="pro-mint">{config.mint}</code>
-            </p>
-          ) : (
-            <p className="small muted">
-              No token mint or launch status is implied. Access activates only
-              after the official mint is configured.
+              Configured mint: <code className="pro-mint">{session.mint}</code>
             </p>
           )}
         </div>
         <div className="pro-wallet">
-          <h3>Read-only wallet connection</h3>
+          <h3>Holder verification</h3>
           <p className="small muted">
-            Shares a public account address. No signature, transaction,
-            approval, delegation, private key or seed phrase is requested.
+            Connect a wallet, then sign a one-time Pro challenge. The Worker
+            checks your $VG balance on Solana before issuing an HttpOnly
+            session. No transaction is submitted.
           </p>
           {wallet.account ? (
             <>
@@ -117,15 +177,37 @@ export function Pro({
                 </label>
               )}
               <div className="pro-wallet-actions">
+                {!eligible && session.status !== "not-configured" && (
+                  <button
+                    type="button"
+                    className="primary"
+                    disabled={busy || wallet.connecting}
+                    onClick={() => void proveHoldings()}
+                  >
+                    {busy ? "Verifying…" : "Prove holdings"}
+                  </button>
+                )}
+                {eligible && (
+                  <a className="button primary" href={toolsHref}>
+                    Open Policy Builder
+                  </a>
+                )}
                 <button
                   type="button"
-                  onClick={refresh}
-                  disabled={
-                    result.status === "checking" || setup.status !== "ready"
-                  }
+                  onClick={() => void refresh()}
+                  disabled={busy}
                 >
-                  Refresh access
+                  Refresh
                 </button>
+                {eligible && (
+                  <button
+                    type="button"
+                    onClick={() => void logout()}
+                    disabled={busy}
+                  >
+                    End Pro session
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => void controller.disconnect()}
@@ -163,12 +245,6 @@ export function Pro({
               >
                 {wallet.connecting ? "Connecting…" : "Connect wallet"}
               </button>
-              {!wallet.wallets.length && (
-                <p className="small muted pro-no-wallet">
-                  Open this page with a Wallet Standard-compatible Solana wallet
-                  available.
-                </p>
-              )}
             </>
           )}
           {wallet.error && (
@@ -181,44 +257,23 @@ export function Pro({
       {!eligible && (
         <div className="pro-tools">
           <article>
-            <p className="small-label">HOLDER TOOL / AVAILABLE AFTER UNLOCK</p>
+            <p className="small-label">HOLDER TOOL / SERVER GATED</p>
             <h3>Policy Builder</h3>
             <p>
-              Set amount and time limits, generate validated JSON, and apply
-              your policy to Advanced Verification.
+              Served from a Worker-protected route only after an on-chain holder
+              session is issued.
             </p>
             <span className="pro-tool-label">
-              Locked until holdings are verified
+              Locked until the Worker verifies $VG holdings
             </span>
           </article>
-          <div className="pro-coming">
-            <p className="small-label">COMING LATER / NOT IMPLEMENTED</p>
-            <h3>Batch Verification</h3>
-            <p>Potential future tool for inspecting multiple vouchers.</p>
-            <h3>Advanced Reports</h3>
-            <p>Potential future report views. No release date is promised.</p>
-          </div>
         </div>
       )}
-      <div hidden={!eligible}>
-        <PolicyBuilder
-          enabled={eligible}
-          onApply={(policy) => {
-            if (eligible) onApply(policy);
-          }}
-        />
-      </div>
-      {eligible && (
-        <p className="pro-future">
-          Coming later: Batch Verification and Advanced Reports. These planned
-          tools are not implemented.
-        </p>
-      )}
       <p className="pro-boundary">
-        Client-side token gating is a convenience feature and can be bypassed in
-        the browser. Bundled tools are public code; this gate protects no
-        secrets or privileged operations. Token ownership and voucher
-        verification are separate trust decisions.
+        Hosted Pro access is enforced by the Cloudflare Pages Worker: a signed
+        challenge plus live SPL balance against the configured mint. Client UI
+        alone cannot issue a session. Open-source forks are outside this hosted
+        gate.
       </p>
     </section>
   );
