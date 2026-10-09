@@ -84,7 +84,7 @@ export function loadProConfig(): ProConfig {
     mint: import.meta.env.VITE_VG_TOKEN_MINT?.trim() || "",
     rpcUrl:
       import.meta.env.VITE_VG_RPC_URL?.trim() ||
-      "https://api.mainnet-beta.solana.com",
+      "https://voucherguard.pages.dev/api/solana-rpc",
     threshold: import.meta.env.VITE_VG_HOLDER_THRESHOLD?.trim() || "1",
     network: import.meta.env.VITE_VG_NETWORK?.trim() || "mainnet-beta",
   };

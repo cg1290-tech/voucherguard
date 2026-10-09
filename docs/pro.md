@@ -1,6 +1,6 @@
 # VoucherGuard Pro
 
-Pro is an optional, client-side holder toolkit for the future **$VG** token on **Solana mainnet-beta**. The free voucher playground, core SDK and CLI keep their existing functionality and require no wallet or network. Pro has no backend, database, custody, token transfers, signing requests, subscriptions or paid APIs.
+Pro is an optional, client-side holder toolkit for the future **$VG** token on **Solana mainnet-beta**. The free voucher playground, core SDK and CLI keep their existing functionality and require no wallet or network. Pro uses an optional Cloudflare Pages read-only RPC relay. It has no database, custody, token transfers, signing requests, subscriptions or paid APIs.
 
 ## Pre-launch behavior
 
@@ -59,7 +59,7 @@ Edit `apps/web/.env.local` locally or supply the following public environment va
 ```dotenv
 # Leave unset until the official $VG mainnet mint is independently confirmed.
 VITE_VG_TOKEN_MINT=
-VITE_VG_RPC_URL=https://api.mainnet-beta.solana.com
+VITE_VG_RPC_URL=https://voucherguard.pages.dev/api/solana-rpc
 VITE_VG_HOLDER_THRESHOLD=1
 VITE_VG_NETWORK=mainnet-beta
 ```
@@ -67,12 +67,12 @@ VITE_VG_NETWORK=mainnet-beta
 After launch:
 
 1. Independently confirm and review the official mainnet mint. Set `VITE_VG_TOKEN_MINT` to that exact address; never substitute a ticker, speculative mint or example fixture.
-2. Set a public, browser/CORS-compatible HTTPS RPC endpoint. The default Solana public endpoint is free but rate limited. No custom node, paid service or API subscription is required. These Vite variables are public; never add a privileged API key, credentials or secret.
+2. Set a public, browser/CORS-compatible HTTPS RPC endpoint. The default Pages relay forwards only three read methods to the fixed Solana public endpoint; direct browser requests to that upstream may return HTTP 403. The connected public address is visible to the relay host and upstream. No custom node, paid service or API subscription is required. These Vite variables are public; never add a privileged API key, credentials or secret.
 3. Set a positive decimal threshold, normally `1`. Precision must be supported by the mint decimals. No balances are approximated with floats.
 4. Run `pnpm check` and `pnpm test:browser`, inspect the static build, and rebuild/deploy through the existing manual GitHub Pages workflow. The Pages workflow passes **repository variables** `VG_TOKEN_MINT`, `VG_RPC_URL`, `VG_HOLDER_THRESHOLD`, `VG_NETWORK` into the public build. With no repository mint variable, the deployed gate stays coming-soon and locked.
 5. On the public site, connect an independently funded holder wallet, refresh and check the displayed configuration/status. Repeat with an ineligible wallet and a disconnected session. Do not assume a fixture test proves real token availability.
 
-The site remains static and supports the existing GitHub Pages subpath. There is no token issuance, smart contract, staking, payment, transfer or on-chain activation transaction in this project.
+The free verifier remains static and supports the existing GitHub Pages subpath. Pro uses the deployed Pages relay by default; Vite preview and GitHub Pages do not execute `_worker.js`. There is no token issuance, smart contract, staking, payment, transfer or on-chain activation transaction in this project.
 
 ## Limitations of client-side gating
 
