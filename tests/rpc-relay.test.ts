@@ -27,7 +27,7 @@ describe("read-only Pages RPC relay", () => {
     );
     expect(response.status).toBe(200);
     expect(fetcher).toHaveBeenCalledWith(
-      "https://api.mainnet-beta.solana.com",
+      "https://solana-rpc.publicnode.com",
       expect.objectContaining({
         body: JSON.stringify(genesis),
         credentials: "omit",

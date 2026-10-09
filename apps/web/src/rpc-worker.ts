@@ -1,5 +1,5 @@
 /** Optional Pages relay: fixed public upstream and read-only methods only. */
-const UPSTREAM = "https://api.mainnet-beta.solana.com";
+const UPSTREAM = "https://solana-rpc.publicnode.com";
 const MAX_BODY = 4096;
 const MAX_RESPONSE = 1024 * 1024;
 const ORIGINS = new Set([
