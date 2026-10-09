@@ -60,7 +60,17 @@ export interface WalletSnapshot {
   error: string;
   revision: number;
 }
-/** Thin Wallet Standard integration; no signing feature is invoked or even required. */
+const SOLANA_SIGN_MESSAGE = "solana:signMessage";
+
+type SignMessageFeature = {
+  version: string;
+  signMessage: (input: {
+    account: WalletAccount;
+    message: Uint8Array;
+  }) => Promise<readonly { signature: Uint8Array }[]>;
+};
+
+/** Wallet Standard connect + optional Solana message signing for Pro sessions. */
 export class WalletController {
   private snapshot: WalletSnapshot;
   private readonly listeners = new Set<() => void>();
@@ -205,6 +215,28 @@ export class WalletController {
           "Disconnected locally. Revoke the site connection in your wallet if needed.",
       });
     }
+  }
+  /** Sign a Pro access challenge. Required only for holder-session unlock. */
+  async signMessage(message: Uint8Array): Promise<Uint8Array> {
+    const { wallet, account } = this.snapshot;
+    if (!wallet || !account)
+      throw new Error("Connect a Solana wallet before proving holdings.");
+    const feature = wallet.features[SOLANA_SIGN_MESSAGE] as
+      | SignMessageFeature
+      | undefined;
+    if (
+      !feature ||
+      typeof feature.signMessage !== "function" ||
+      (feature.version !== "1.0.0" && feature.version !== "1.1.0")
+    )
+      throw new Error(
+        "This wallet cannot sign messages required for Pro holder verification.",
+      );
+    const output = await feature.signMessage({ account, message });
+    const signature = output[0]?.signature;
+    if (!(signature instanceof Uint8Array) || signature.length !== 64)
+      throw new Error("Wallet returned an invalid message signature.");
+    return signature;
   }
 }
 

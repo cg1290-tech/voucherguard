@@ -80,4 +80,14 @@ Before public release, independently review security semantics, enable and verif
 
 ## Read-only Pro RPC relay
 
-The Vite build emits `_worker.js` and `_routes.json` for Cloudflare Pages. Only `/api/solana-rpc` invokes the worker; static verification remains local. Upload these files with the production ZIP. Set Pages secret `HELIUS_API_KEY` for indexed token-account reads; genesis/transaction reads try free RPCs first. The key stays in Worker env and is never embedded in the browser bundle. The relay requires an allowlisted Origin, allows only getGenesisHash, getAccountInfo, getTokenAccountsByOwner and getTransaction, and applies a stricter rate limit to non-browser clients. Worker fetch must use `redirect: "manual"`; Cloudflare Workers throw on `redirect: "error"`. Browser-facing responses are no-store and bounded. Vite preview and GitHub Pages do not run this worker; they can use the canonical deployed HTTPS relay. Custom browser RPC endpoints require a matching CSP connect-src origin. Keep the mint unset until the official token is independently confirmed. Optionally add a Cloudflare rate-limiting rule on `/api/solana-rpc` for defense in depth.
+The Vite build emits `_worker.js` and `_routes.json` for Cloudflare Pages. The worker handles `/api/*` and protects `/pro` + `/pro.html` + `/pro/*`. Upload these files with the production ZIP.
+
+Pages secrets (Worker env, never `VITE_*`):
+- `HELIUS_API_KEY` — indexed token-account reads
+- `VG_TOKEN_MINT` — official SPL mint (leave unset until confirmed)
+- `VG_HOLDER_THRESHOLD` — decimal token amount, default `1`
+- `PRO_SESSION_SECRET` — ≥32 character random secret for challenge/session HMAC
+
+Without mint + session secret, Pro stays locked (`not-configured`). With them set, holders prove access via `/api/pro/challenge` + `/api/pro/session`; Policy Builder is only at `/pro.html` behind the session cookie.
+
+The RPC relay requires an allowlisted Origin, allows only getGenesisHash, getAccountInfo, getTokenAccountsByOwner and getTransaction, prefers Helius only for token-account reads, and rate-limits non-browser clients more tightly. Worker fetch must use `redirect: "manual"`. Vite preview and GitHub Pages do not run this worker—hosted Pro unlock only works on Cloudflare Pages. Optionally add a Cloudflare rate-limiting rule on `/api/*` for defense in depth.

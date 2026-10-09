@@ -99,6 +99,17 @@ test("default production Pro stays locked with an unset mint and has no test byp
   page.on("request", (r) => {
     if (r.method() === "POST") posts.push(r.url());
   });
+  await page.route("**/api/pro/status", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        status: "not-configured",
+        message:
+          "Token access coming soon. Holder mint is not configured on the server.",
+      }),
+    });
+  });
   const { installWallet } = await import("./pro.browser-support");
   await installWallet(page);
   await page.goto("./");
@@ -109,7 +120,7 @@ test("default production Pro stays locked with an unset mint and has no test byp
   await expect(page.getByTestId("pro-access-status")).toHaveText(
     "Token access coming soon",
   );
-  await expect(page.getByTestId("policy-builder")).toBeHidden();
+  await expect(page.getByTestId("policy-builder")).toHaveCount(0);
   await page.getByRole("button", { name: /Valid payment voucher/ }).click();
   await page.getByRole("button", { name: "Verify locally" }).click();
   await expect(page.getByTestId("status")).toHaveText("PASS");

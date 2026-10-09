@@ -66,6 +66,29 @@
   font-weight: 500;
   margin: 0 0 12px;
 }
+.pro-state.locked,
+.pro-state.error {
+  color: #c4b59a;
+}
+.pro-tools-page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+.pro-tools-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+.pro-wallet-actions a.button,
+.pro-wallet-actions a.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
 .pro-wallet .primary {
   margin-top: 12px;
 }
