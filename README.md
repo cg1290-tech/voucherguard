@@ -39,7 +39,7 @@ pnpm build
 pnpm dev
 ```
 
-Open the URL printed by Vite (normally `http://127.0.0.1:5173`). Development and preview use a temporary local static server; the shipped application is static assets with no backend. After installation, the core, CLI, tests and build require no external services. Browser verification continues without connectivity after assets are loaded. There is no service worker promising offline page reloads.
+Open the URL printed by Vite (normally `http://127.0.0.1:5173`). Development and preview use a temporary local static server; the free verifier ships as static assets; optional Pro balance reads use a Cloudflare Pages relay. After installation, the core, CLI, tests and build require no external services. Browser verification continues without connectivity after assets are loaded. There is no service worker promising offline page reloads.
 
 ## SDK quick start
 
@@ -161,7 +161,7 @@ Initial Playwright browser installation downloads a test browser; this is a deve
 
 ## Static deployment
 
-`apps/web/dist` is the complete static site. Relative assets support GitHub Pages subpaths; no history routing is used. See [deployment instructions](docs/deployment.md). The production site at [voucherguard.pages.dev](https://voucherguard.pages.dev/) uses Cloudflare Pages Direct Upload; GitHub commits do not automatically update it. GitHub Pages remains a fallback with a workflow that runs **only on manual dispatch**. The source repository is published under cg1290-tech. npm packages are not published.
+`apps/web/dist` contains static assets plus the optional read-only Pages RPC worker. Relative assets support GitHub Pages subpaths; no history routing is used. See [deployment instructions](docs/deployment.md). The production site at [voucherguard.pages.dev](https://voucherguard.pages.dev/) uses Cloudflare Pages Direct Upload; GitHub commits do not automatically update it. GitHub Pages remains a fallback with a workflow that runs **only on manual dispatch**. The source repository is published under cg1290-tech. npm packages are not published.
 
 ## Roadmap and contributions
 

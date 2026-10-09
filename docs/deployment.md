@@ -47,7 +47,7 @@ Build from the monorepo root for the root URL:
 VITE_BASE_PATH=/ VITE_REPOSITORY_URL=https://github.com/cg1290-tech/voucherguard pnpm build
 ```
 
-In the existing Cloudflare account, open Workers & Pages → `voucherguard` (Pages) → Create deployment. Choose Production and upload the **contents** of `apps/web/dist` (including `index.html`, `assets/`, the logo and `social-card.png`). Include the `_headers` file: Cloudflare applies its Content Security Policy, frame restrictions and browser permission restrictions. The policy permits only the default Solana RPC host; if a different RPC endpoint is configured, update `connect-src` to that exact trusted origin before building. Vite preview and GitHub Pages do not apply this Cloudflare header file. Confirm the upload and deploy. Keep the prior successful deployment available for rollback.
+In the existing Cloudflare account, open Workers & Pages → `voucherguard` (Pages) → Create deployment. Choose Production and upload the **contents** of `apps/web/dist` (including `index.html`, `assets/`, the logo, `social-card.png`, `_worker.js` and `_routes.json`). Include the `_headers` file: Cloudflare applies its Content Security Policy, frame restrictions and browser permission restrictions. The policy permits only the same origin and canonical Pages relay; if a different RPC endpoint is configured, update `connect-src` to that exact trusted origin before building. Vite preview and GitHub Pages do not apply this Cloudflare header file. Confirm the upload and deploy. Keep the prior successful deployment available for rollback.
 
 Verify the homepage, logo, social image URL, free playground scenarios and Pro's `Token access coming soon` state at the production URL. Open Graph and X card metadata point to this canonical domain; X may cache older previews.
 
@@ -77,3 +77,7 @@ From monorepo root: install `pnpm install --frozen-lockfile`, build `pnpm build`
 Packages are ESM with declarations and publish only `dist`. Metadata points exclusively to cg1290-tech. Build first, inspect `pnpm --filter @voucherguard/core pack` and CLI tarballs, review generated content and workspace dependency replacement, then manually decide whether to publish. Scope ownership/availability has not been verified. Never publish automatically.
 
 Before public release, independently review security semantics, enable and verify private vulnerability reporting, recheck upstream drift and validate supported Node/browser versions. The GitHub source repository is published under cg1290-tech. npm publication remains a separate manual release step.
+
+## Read-only Pro RPC relay
+
+The Vite build emits `_worker.js` and `_routes.json` for Cloudflare Pages. Only `/api/solana-rpc` invokes the worker; static verification remains local. Upload these files with the production ZIP. The relay has no credentials or storage and forwards only canonical genesis, mint and owner-token-account reads to the fixed public Solana HTTPS endpoint. Browser-facing responses are no-store and bounded. Vite preview and GitHub Pages do not run this worker; they can use the canonical deployed HTTPS relay. Custom browser RPC endpoints require a matching CSP connect-src origin. Keep the mint unset until the official token is independently confirmed.
