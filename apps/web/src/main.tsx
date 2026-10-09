@@ -262,9 +262,9 @@ function App() {
               Supports Solana Foundation payment channel V1 vouchers. This is
               not a complete x402 verifier. Quick Check reads confirmed
               transactions through a public RPC relay; Advanced Verification
-              runs offline on imported documents. Pro uses a read-only wallet
-              connection to check holder eligibility. Nothing here executes
-              payments or takes custody.
+              runs offline on imported documents. Hosted Pro requires a
+              Worker-verified $VG holder session before Policy Builder is
+              served. Nothing here executes payments or takes custody.
             </p>
           </div>
         </section>
@@ -593,9 +593,13 @@ pnpm check`}</pre>
               channel.
             </p>
             <p>
-              <strong>No independent audit.</strong> VoucherGuard does not
-              replace native on-chain checks. Test fixtures have public keys
-              generated from a public test seed and never involve funds.
+              <strong>No independent audit.</strong> This software has not been
+              independently security-reviewed. A PASS report is conditional
+              evidence for the supplied inputs—not a certification of funds,
+              settlement, or production readiness. Do not rely on it alone for
+              consequential payment authorization. VoucherGuard does not replace
+              native on-chain checks. Test fixtures use a public test-only seed
+              and never involve funds.
             </p>
           </div>
         </section>

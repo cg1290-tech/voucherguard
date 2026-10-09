@@ -1,4 +1,5 @@
 import { createRpcRelay } from "../rpc-worker";
+import { enforceApiRateLimit } from "./rate-limit";
 import { guardProAssets, handleProApi } from "./session";
 import type { WorkerEnv } from "./shared";
 
@@ -7,6 +8,10 @@ const relay = createRpcRelay();
 export default {
   async fetch(request: Request, env: WorkerEnv): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/")) {
+      const limited = await enforceApiRateLimit(request, env.API_RATE_LIMITER);
+      if (limited) return limited;
+    }
     if (url.pathname.startsWith("/api/pro"))
       return handleProApi(request, env, fetch);
     const blocked = await guardProAssets(request, env, fetch);
