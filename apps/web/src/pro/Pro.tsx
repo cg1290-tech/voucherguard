@@ -215,10 +215,10 @@ export function Pro({
         </p>
       )}
       <p className="pro-boundary">
-        Client-side token gating is a convenience feature and can be bypassed.
-        Bundled tools are public code; this gate protects no secrets or
-        privileged operations. Token ownership and voucher verification are
-        separate checks.
+        Client-side token gating is a convenience feature and can be bypassed in
+        the browser. Bundled tools are public code; this gate protects no
+        secrets or privileged operations. Token ownership and voucher
+        verification are separate trust decisions.
       </p>
     </section>
   );
