@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { createRpcRelay } from "../apps/web/src/rpc-worker";
 
-const env = { ASSETS: { fetch: async () => new Response("asset") } };
+const env = {
+  ASSETS: { fetch: async () => new Response("asset") },
+  HELIUS_API_KEY: undefined as string | undefined,
+};
 const request = (body: unknown, origin = "https://voucherguard.pages.dev") =>
   new Request("https://voucherguard.pages.dev/api/solana-rpc", {
     method: "POST",
@@ -27,17 +30,18 @@ describe("read-only Pages RPC relay", () => {
     );
     expect(response.status).toBe(200);
     expect(fetcher).toHaveBeenCalledWith(
-      "https://solana-rpc.publicnode.com",
+      "https://api.mainnet-beta.solana.com",
       expect.objectContaining({
         body: JSON.stringify(genesis),
         credentials: "omit",
-        redirect: "error",
+        redirect: "manual",
         headers: {
           "Content-Type": "application/json",
           "User-Agent": "VoucherGuard/0.1 RPC relay",
         },
       }),
     );
+    expect(fetcher).toHaveBeenCalledTimes(1);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
   it("rejects signing, transaction, batch and malformed calls without forwarding", async () => {
@@ -82,6 +86,68 @@ describe("read-only Pages RPC relay", () => {
     expect(
       (await createRpcRelay(fetcher).fetch(request(genesis), env)).status,
     ).toBe(502);
+  });
+  it("falls back to the next fixed upstream when the first is unavailable", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("rate limited", { status: 429 }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ jsonrpc: "2.0", id: 1, result: "genesis" }),
+        ),
+      ) as unknown as typeof fetch;
+    const response = await createRpcRelay(fetcher).fetch(request(genesis), env);
+    expect(response.status).toBe(200);
+    expect(fetcher).toHaveBeenNthCalledWith(
+      1,
+      "https://api.mainnet-beta.solana.com",
+      expect.any(Object),
+    );
+    expect(fetcher).toHaveBeenNthCalledWith(
+      2,
+      "https://solana-rpc.publicnode.com",
+      expect.any(Object),
+    );
+  });
+  it("falls back when the first upstream returns a JSON-RPC error body", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            error: {
+              code: -32602,
+              message: "Indexed requests require a personal token",
+            },
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ jsonrpc: "2.0", id: 1, result: "genesis" }),
+        ),
+      ) as unknown as typeof fetch;
+    const response = await createRpcRelay(fetcher).fetch(request(genesis), env);
+    expect(response.status).toBe(200);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+  it("prefers Helius when HELIUS_API_KEY is configured on the Worker env", async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({ jsonrpc: "2.0", id: 1, result: "genesis" }),
+        ),
+    ) as unknown as typeof fetch;
+    await createRpcRelay(fetcher).fetch(request(genesis), {
+      ...env,
+      HELIUS_API_KEY: "test-key",
+    });
+    expect(fetcher).toHaveBeenCalledWith(
+      "https://mainnet.helius-rpc.com/?api-key=test-key",
+      expect.any(Object),
+    );
   });
   it("caps per-isolate requests and does not forward excess", async () => {
     const fetcher = vi.fn(
