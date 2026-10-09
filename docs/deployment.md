@@ -47,7 +47,7 @@ Build from the monorepo root for the root URL:
 VITE_BASE_PATH=/ VITE_REPOSITORY_URL=https://github.com/cg1290-tech/voucherguard pnpm build
 ```
 
-In the existing Cloudflare account, open Workers & Pages → `voucherguard` (Pages) → Create deployment. Choose Production and upload the **contents** of `apps/web/dist` (including `index.html`, `assets/`, the logo and `social-card.png`). Confirm the upload and deploy. Keep the prior successful deployment available for rollback.
+In the existing Cloudflare account, open Workers & Pages → `voucherguard` (Pages) → Create deployment. Choose Production and upload the **contents** of `apps/web/dist` (including `index.html`, `assets/`, the logo and `social-card.png`). Include the `_headers` file: Cloudflare applies its Content Security Policy, frame restrictions and browser permission restrictions. The policy permits only the default Solana RPC host; if a different RPC endpoint is configured, update `connect-src` to that exact trusted origin before building. Vite preview and GitHub Pages do not apply this Cloudflare header file. Confirm the upload and deploy. Keep the prior successful deployment available for rollback.
 
 Verify the homepage, logo, social image URL, free playground scenarios and Pro's `Token access coming soon` state at the production URL. Open Graph and X card metadata point to this canonical domain; X may cache older previews.
 
