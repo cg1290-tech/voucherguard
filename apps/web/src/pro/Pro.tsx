@@ -218,6 +218,20 @@ export function Pro() {
             </>
           ) : (
             <>
+              {eligible && (
+                <div className="pro-wallet-actions">
+                  <a className="button primary" href={toolsHref}>
+                    Open Policy Builder
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => void logout()}
+                    disabled={busy}
+                  >
+                    End Pro session
+                  </button>
+                </div>
+              )}
               <label className="pro-select">
                 Solana wallet
                 <select
@@ -238,7 +252,7 @@ export function Pro() {
               <button
                 type="button"
                 className="primary"
-                disabled={!selected || wallet.connecting}
+                disabled={!selected || wallet.connecting || eligible}
                 onClick={() => {
                   if (selected) void controller.connect(selected);
                 }}
