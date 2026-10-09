@@ -7,10 +7,7 @@ import {
 } from "../apps/web/src/quick/extract";
 
 const fixture = JSON.parse(
-  readFileSync(
-    new URL("./fixtures/settle-tx.json", import.meta.url),
-    "utf8",
-  ),
+  readFileSync(new URL("./fixtures/settle-tx.json", import.meta.url), "utf8"),
 ) as { result: Parameters<typeof extractPaymentChannelVoucher>[0] };
 
 const REAL_SIG =
@@ -18,9 +15,9 @@ const REAL_SIG =
 
 describe("Quick Check transaction extraction", () => {
   it("parses Solscan URLs and raw signatures", () => {
-    expect(
-      parseTransactionInput(`https://solscan.io/tx/${REAL_SIG}`),
-    ).toBe(REAL_SIG);
+    expect(parseTransactionInput(`https://solscan.io/tx/${REAL_SIG}`)).toBe(
+      REAL_SIG,
+    );
     expect(
       parseTransactionInput(
         `https://explorer.solana.com/tx/${REAL_SIG}?cluster=mainnet`,

@@ -48,7 +48,8 @@ export type QuickExtractResult =
 /** Accept a Solscan/Explorer URL or a raw base58 transaction signature. */
 export function parseTransactionInput(raw: string): string {
   const text = raw.trim();
-  if (!text) throw new Error("Paste a Solscan URL or Solana transaction signature.");
+  if (!text)
+    throw new Error("Paste a Solscan URL or Solana transaction signature.");
   const fromUrl = text.match(
     /(?:solscan\.io|explorer\.solana\.com|solana\.fm)\/tx\/([1-9A-HJ-NP-Za-km-z]{64,100})/i,
   );
@@ -75,7 +76,9 @@ export function parseEd25519Instruction(data: Uint8Array): {
 } {
   if (data.length < 16) throw new Error("Ed25519 instruction data too short.");
   if (data[0] !== 1)
-    throw new Error("Only single-signature Ed25519 instructions are supported.");
+    throw new Error(
+      "Only single-signature Ed25519 instructions are supported.",
+    );
   const sigOff = data[2]! | (data[3]! << 8);
   const sigIx = data[4]! | (data[5]! << 8);
   const pkOff = data[6]! | (data[7]! << 8);
@@ -84,7 +87,9 @@ export function parseEd25519Instruction(data: Uint8Array): {
   const msgLen = data[12]! | (data[13]! << 8);
   const msgIx = data[14]! | (data[15]! << 8);
   if (sigIx !== 0xffff || pkIx !== 0xffff || msgIx !== 0xffff)
-    throw new Error("Ed25519 instruction must embed signature, key and message.");
+    throw new Error(
+      "Ed25519 instruction must embed signature, key and message.",
+    );
   if (
     sigOff + 64 > data.length ||
     pkOff + 32 > data.length ||
@@ -111,9 +116,7 @@ type WireTx = {
   };
 };
 
-export function extractPaymentChannelVoucher(
-  tx: WireTx,
-):
+export function extractPaymentChannelVoucher(tx: WireTx):
   | {
       settlement: SettlementKind;
       channelId: string;
@@ -147,11 +150,7 @@ export function extractPaymentChannelVoucher(
         unsupported:
           "Settlement channel account does not match the signed voucher channel.",
       };
-    if (
-      settlement === "settle_and_seal" &&
-      raw.length >= 2 &&
-      raw[1] === 0
-    )
+    if (settlement === "settle_and_seal" && raw.length >= 2 && raw[1] === 0)
       return {
         unsupported:
           "This settle_and_seal transaction locked an existing watermark without a new voucher.",
@@ -186,9 +185,7 @@ export async function historicalVerifyTransaction(
       signature,
       message: extracted.unsupported,
     };
-  const now = BigInt(
-    tx.blockTime ?? Math.floor(Date.now() / 1000),
-  );
+  const now = BigInt(tx.blockTime ?? Math.floor(Date.now() / 1000));
   const voucherReport = await verifyVoucher({
     message: extracted.extracted.message,
     signature: extracted.extracted.signature,
@@ -241,8 +238,7 @@ export async function fetchTransaction(
       ],
     }),
   });
-  if (!response.ok)
-    throw new Error(`RPC unavailable (${response.status}).`);
+  if (!response.ok) throw new Error(`RPC unavailable (${response.status}).`);
   const body = (await response.json()) as {
     result?: WireTx | null;
     error?: { message?: string };
