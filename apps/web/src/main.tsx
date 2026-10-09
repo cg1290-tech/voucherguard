@@ -13,9 +13,12 @@ import { createRoot } from "react-dom/client";
 import scenarios from "./fixtures.json";
 import "./style.css";
 import { Pro } from "./pro/Pro";
+import { loadProConfig, validateConfig } from "./pro/config";
 import { applyPolicyToDocument } from "./pro/policy";
 
 const repository = import.meta.env.VITE_REPOSITORY_URL as string | undefined;
+const proSetup = validateConfig(loadProConfig());
+const proConfigured = proSetup.status === "ready";
 const hexField = (value: string) => ({ encoding: "hex", value });
 function App() {
   const [selected, setSelected] = useState("valid");
@@ -216,18 +219,24 @@ function App() {
             </a>
             <a className="product-card" href="#pro">
               <span className="small-label">
-                PRO / HOLDER ACCESS COMING SOON
+                {proConfigured
+                  ? "PRO / CONNECT WALLET TO UNLOCK"
+                  : "PRO / HOLDER ACCESS COMING SOON"}
               </span>
               <strong>
                 Policy Builder <span aria-hidden="true">↗</span>
               </strong>
               <p>
-                Build, export and apply verification policies. Planned access
-                for future $VG holders.
+                Build, export and apply verification policies.
+                {proConfigured
+                  ? " Connect a read-only Solana wallet to check holder access."
+                  : " Planned access for future $VG holders."}
               </p>
             </a>
             <p className="small muted">
-              Official $VG mint is not configured. Holder access is inactive.
+              {proConfigured
+                ? "Holder mint is configured. Connect a wallet in Pro to verify access."
+                : "Official $VG mint is not configured. Holder access is inactive."}
             </p>
           </aside>
         </section>

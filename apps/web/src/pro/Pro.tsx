@@ -47,7 +47,9 @@ export function Pro({
       </div>
       <p className="pro-intro">
         Build, export and apply verification policies with Policy Builder.
-        Holder access is planned for the future $VG token and is not active yet.
+        {setup.status === "ready"
+          ? " Connect a read-only wallet to verify configured mint holdings and unlock Pro tools."
+          : " Holder access activates after the official mint is configured."}{" "}
         Pro checks eligibility through a read-only wallet connection and public
         Solana RPC. The verification playground stays free, with no wallet or
         RPC required.
