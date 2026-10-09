@@ -1,31 +1,40 @@
-import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
-import { defineConfig, transformWithEsbuild } from "vite";
+import * as esbuild from "esbuild";
+import { defineConfig } from "vite";
+
+const root = path.dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig({
   plugins: [
     react(),
     {
-      name: "read-only-pages-relay",
+      name: "pages-worker",
       async generateBundle() {
-        const source = readFileSync(
-          new URL("./src/rpc-worker.ts", import.meta.url),
-          "utf8",
-        );
-        const result = await transformWithEsbuild(source, "rpc-worker.ts", {
-          loader: "ts",
+        const result = await esbuild.build({
+          absWorkingDir: root,
+          entryPoints: ["src/worker/index.ts"],
+          bundle: true,
+          write: false,
+          format: "esm",
+          platform: "browser",
           target: "es2022",
+          logLevel: "silent",
         });
+        const code = result.outputFiles[0]?.text;
+        if (!code) throw new Error("Worker bundle was empty");
         this.emitFile({
           type: "asset",
           fileName: "_worker.js",
-          source: result.code,
+          source: code,
         });
         this.emitFile({
           type: "asset",
           fileName: "_routes.json",
           source: JSON.stringify({
             version: 1,
-            include: ["/api/solana-rpc"],
+            include: ["/api/*", "/pro.html", "/pro/*"],
             exclude: [],
           }),
         });
@@ -33,4 +42,19 @@ export default defineConfig({
     },
   ],
   base: process.env.VITE_BASE_PATH || "./",
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(root, "index.html"),
+        pro: path.resolve(root, "pro.html"),
+      },
+      output: {
+        // Only the Pro entry is Worker-gated under /pro/*; shared chunks stay public.
+        entryFileNames: (chunk) =>
+          chunk.name === "pro" ? "pro/app.js" : "assets/[name]-[hash].js",
+        chunkFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
+      },
+    },
+  },
 });
