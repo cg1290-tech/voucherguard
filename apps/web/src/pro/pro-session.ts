@@ -10,6 +10,11 @@ export type ProSessionStatus =
 export interface ProSessionState {
   status: ProSessionStatus;
   message: string;
+  network?: "solana" | "robinhood";
+  chainId?: number;
+  contract?: string;
+  blockNumber?: string;
+  walletConnectProjectId?: string;
   address?: string;
   balance?: string;
   required?: string;
@@ -66,14 +71,17 @@ export async function fetchProStatus(
   return body;
 }
 
-export async function requestChallenge(signal?: AbortSignal): Promise<{
+export async function requestChallenge(
+  signal?: AbortSignal,
+  address?: string,
+): Promise<{
   challenge: string;
   message: string;
   expiresAt: number;
 }> {
   const response = await proFetch("/api/pro/challenge", {
     method: "POST",
-    body: "{}",
+    body: JSON.stringify(address ? { address } : {}),
     ...(signal ? { signal } : {}),
   });
   const body = (await response.json()) as {
@@ -119,13 +127,23 @@ export async function createProSession(
     if (body.decimals !== undefined) failed.decimals = body.decimals;
     if (body.mint !== undefined) failed.mint = body.mint;
     if (body.slot !== undefined) failed.slot = body.slot;
+    if (body.network !== undefined) failed.network = body.network;
+    if (body.chainId !== undefined) failed.chainId = body.chainId;
+    if (body.contract !== undefined) failed.contract = body.contract;
+    if (body.blockNumber !== undefined) failed.blockNumber = body.blockNumber;
+    if (body.walletConnectProjectId !== undefined)
+      failed.walletConnectProjectId = body.walletConnectProjectId;
     return failed;
   }
   return body;
 }
 
 export async function logoutProSession(): Promise<void> {
-  await proFetch("/api/pro/logout", { method: "POST", body: "{}" });
+  const response = await proFetch("/api/pro/logout", {
+    method: "POST",
+    body: "{}",
+  });
+  if (!response.ok) throw new Error("Hosted session could not be ended");
 }
 
 export function stashPolicyForAdvanced(policy: unknown): void {
