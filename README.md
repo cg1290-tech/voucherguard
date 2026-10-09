@@ -168,3 +168,7 @@ Initial Playwright browser installation downloads a test browser; this is a deve
 **Independent security audit has not been completed.** Before relying on VoucherGuard for consequential payment authorization: commission an independent review and verify the protocol pin and release metadata yourself. Private vulnerability reporting is enabled on the repository. Future scope may include additional independently tested protocol profiles; no generic multi-chain or comprehensive x402 support is promised.
 
 Contributions should include protocol evidence and tests for security behavior. Read [CONTRIBUTING.md](CONTRIBUTING.md). MIT license; no endorsements, adoption claims or audit certification.
+
+### Pons / Robinhood Wallet access
+
+Pro also supports a server-selected Robinhood Chain holder gate for the planned Pons launch. Robinhood Wallet connects using WalletConnect and signs only an authentication message; the Worker checks the official ERC-20 contract and holdings on chain 4663. No contract configured means no unlock. The Solana verifier remains free and unchanged. Setup and real-wallet validation are documented in [Pro configuration](docs/pro.md#robinhood-wallet-and-the-pons-launch).

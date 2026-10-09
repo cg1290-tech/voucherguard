@@ -326,3 +326,10 @@
     display: none;
   }
 }
+
+.pro-connection-code img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 16px 0;
+}
