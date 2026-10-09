@@ -55,6 +55,42 @@ describe("read-only Pages RPC relay", () => {
       expect((await worker.fetch(request(body), env)).status).toBe(400);
     expect(fetcher).not.toHaveBeenCalled();
   });
+  it("forwards canonical getTransaction reads", async () => {
+    const sig =
+      "4wMpYs4wHJX8ArjcTBqZ9pTV1erxAJiqHbUsHkUq44kb8wELDZtRem3k2ZjYQW4kF99TPXe4HhR8hRHJ29DbAvTa";
+    const fetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: null })),
+    ) as unknown as typeof fetch;
+    const response = await createRpcRelay(fetcher).fetch(
+      request({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getTransaction",
+        params: [sig, { encoding: "jsonParsed" }],
+      }),
+      env,
+    );
+    expect(response.status).toBe(200);
+    expect(fetcher).toHaveBeenCalledWith(
+      "https://api.mainnet-beta.solana.com",
+      expect.objectContaining({
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "getTransaction",
+          params: [
+            sig,
+            {
+              encoding: "json",
+              maxSupportedTransactionVersion: 0,
+              commitment: "confirmed",
+            },
+          ],
+        }),
+      }),
+    );
+  });
   it("rejects other origins", async () => {
     const fetcher = vi.fn() as unknown as typeof fetch;
     expect(
