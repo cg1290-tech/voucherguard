@@ -20,6 +20,10 @@ export type WorkerEnv = {
   ASSETS: { fetch(request: Request): Promise<Response> };
   HELIUS_API_KEY?: string;
   VG_TOKEN_MINT?: string;
+  VG_ACCESS_CHAIN?: "solana" | "robinhood";
+  VG_TOKEN_CONTRACT?: string;
+  RH_RPC_URL?: string;
+  WALLETCONNECT_PROJECT_ID?: string;
   VG_HOLDER_THRESHOLD?: string;
   PRO_SESSION_SECRET?: string;
   /** Optional Cloudflare Rate Limiting binding for /api/*. */

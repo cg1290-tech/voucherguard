@@ -164,3 +164,53 @@ test("eligible homepage offers the protected Policy Builder link", async ({
     ),
   ).toBe(true);
 });
+
+test("Robinhood prelaunch gate shows its network and leaves connection disabled without a project ID", async ({
+  page,
+}) => {
+  const external: string[] = [];
+  page.on("request", (request) => {
+    if (/walletconnect/i.test(request.url())) external.push(request.url());
+  });
+  await mockProStatus(page, {
+    status: "not-configured",
+    network: "robinhood",
+    chainId: 4663,
+    message: "Official contract not configured.",
+  });
+  await page.goto("./");
+  await expect(page.locator("#pro .pro-network")).toHaveText("ROBINHOOD CHAIN");
+  await expect(
+    page.getByRole("button", { name: "Connect Robinhood Wallet", exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByTestId("policy-builder")).toHaveCount(0);
+  expect(external).toEqual([]);
+});
+
+test("a server-issued Robinhood holder session offers the protected tools route", async ({
+  page,
+}) => {
+  await mockProStatus(page, {
+    status: "eligible",
+    network: "robinhood",
+    chainId: 4663,
+    message: "Holder session verified.",
+    address: `0x${"11".repeat(20)}`,
+    balance: "1000000000000000000",
+    required: "1000000000000000000",
+    decimals: 18,
+    contract: `0x${"22".repeat(20)}`,
+    blockNumber: "123",
+    toolsPath: "/pro.html",
+  });
+  await page.goto("./");
+  await expect(page.getByTestId("pro-access-status")).toHaveText(
+    "Pro unlocked",
+  );
+  await expect(
+    page
+      .locator("#pro")
+      .getByRole("link", { name: "Open Policy Builder", exact: true }),
+  ).toHaveAttribute("href", "/pro.html");
+  await expect(page.locator("#pro")).toContainText("Observed at block 123");
+});
