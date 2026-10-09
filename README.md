@@ -2,15 +2,15 @@
 
 **Verify what your AI agents sign.**
 
-[Live playground](https://voucherguard.pages.dev/) · [Source repository](https://github.com/cg1290-tech/voucherguard)
+[Live site](https://voucherguard.pages.dev/) · [Source repository](https://github.com/cg1290-tech/voucherguard)
 
-An offline, open-source verification toolkit for **Solana Foundation payment channel V1 vouchers**. Decode the exact signed message, verify Ed25519 against an independently trusted public key, enforce application policies, and compare cumulative authorization against a supplied trusted channel snapshot.
+An open-source verification toolkit for **Solana Foundation payment channel V1 vouchers**. Quick Check reads confirmed settlement transactions; Advanced Verification inspects imported signed documents offline; both reuse the same Ed25519/policy engine.
 
 AI agents can authorize spending. A valid signature alone does not establish that the authorization matches your channel, budget, clock or settlement watermark. VoucherGuard makes those checks explicit and reviewable.
 
-**The free verifier needs no backend, RPC or wallet connection.** No private-key collection, payment execution, telemetry or AI inference. Optional VoucherGuard Pro uses read-only wallet connection and public Solana RPC for holder eligibility. Not an agent platform. Not a full x402 verifier. **Not independently audited.**
+**Quick Check** uses a read-only public RPC relay. **Advanced Verification** (document lab) needs no wallet. Optional VoucherGuard Pro uses a read-only wallet connection for future $VG holder eligibility. No private-key collection, payment execution, telemetry or AI inference. Not an agent platform. Not a full x402 verifier. **Not independently audited.**
 
-![Playground preview](docs/preview-desktop.png)
+![Site preview](docs/preview-desktop.png)
 
 ## Scope and protocol
 
@@ -98,19 +98,19 @@ Exit codes: **0** PASS or successful decode, **1** verification FAIL, **2** INDE
 
 All example documents are simulations with a public test-only seed and explicit simulated time. They are legitimate signatures, not real payments. Never trust a signer or state just because it appears in the same JSON file as the voucher.
 
-## Playground
+## Quick Check and Advanced Verification
 
-Paste a document, supply the independently expected signer and channel, edit amount/increase caps and expiry/state policies, then verify locally. Channel state and additional time-window policies can be edited in JSON. Controls explicitly override corresponding JSON fields. Clear Unix time to use the local clock. Changing inputs clears the previous result.
+**Quick Check** accepts a Solscan URL or Solana signature, fetches the confirmed transaction through the read-only Pages relay, extracts a Payment Channels V1 settlement voucher when present, and runs historical Ed25519 verification in the browser. It does not certify current spendability.
 
-Seven shared fixtures demonstrate valid authorization, signature tampering, expiration, excessive amount, channel mismatch, stale watermark and insufficient state. Export JSON or a readable text report. PNG report export is optional and not implemented; browser screenshots can be taken normally.
+**Advanced Verification** is the document lab: paste a voucher JSON, supply the independently expected signer and channel, edit amount/increase caps and expiry/state policies, then verify offline. Seven shared fixtures demonstrate common failure modes. Export JSON or a readable text report.
 
 ## VoucherGuard Pro (pre-launch)
 
-The static website now includes an optional holder toolkit for the future **$VG** token. The official mint is **unset by default**: production shows **Token access coming soon**, and wallet connection alone never unlocks tools. The free verification playground stays available offline.
+Optional holder toolkit for the future **$VG** token. The official mint is **unset by default**: production shows **Token access coming soon**, and wallet connection alone never unlocks tools. Free Quick Check and Advanced Verification stay available without holder access.
 
 Pro discovers Wallet Standard-compatible Solana wallets using the official `@wallet-standard` libraries. It requests only a public account, verifies the RPC is mainnet-beta, reads mint decimals and exact-owner/exact-mint SPL Token or Token-2022 accounts, and aggregates raw amounts with BigInt. The default threshold is one whole token; malformed configuration, missing data, unsupported networks and RPC errors close access. Account changes and manual refresh recheck holdings without periodic polling or signing.
 
-The working **Policy Builder** provides amount/increase caps, finite expiry, validity windows, trusted-state requirement and expected channel controls. It uses the core policy schema, previews/copies/downloads JSON and applies only the policy to the free playground while preserving signed bytes, signature and supplied state. Standard/Conservative presets are editable examples, not security guarantees. Batch Verification and Advanced Reports are explicitly planned and unimplemented.
+The working **Policy Builder** provides amount/increase caps, finite expiry, validity windows, trusted-state requirement and expected channel controls. It uses the core policy schema, previews/copies/downloads JSON and applies only the policy to Advanced Verification while preserving signed bytes, signature and supplied state. Standard/Conservative presets are editable examples, not security guarantees. Batch Verification and Advanced Reports are explicitly planned and unimplemented.
 
 Configure public build variables `VITE_VG_TOKEN_MINT`, `VITE_VG_RPC_URL`, `VITE_VG_HOLDER_THRESHOLD` and `VITE_VG_NETWORK` after independently confirming the official mint. The manual GitHub Pages workflow accepts matching repository variables `VG_TOKEN_MINT`, `VG_RPC_URL`, `VG_HOLDER_THRESHOLD` and `VG_NETWORK`. No mint variable means no holder access. See [configuration, activation and test procedure](docs/pro.md).
 

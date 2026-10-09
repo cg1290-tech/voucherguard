@@ -62,7 +62,7 @@ export function PolicyBuilder({
     try {
       onApply(policy);
       setNotice(
-        "Policy applied to the playground. Voucher message, signature and state are preserved.",
+        "Policy applied to Advanced Verification. Voucher message, signature and state are preserved.",
       );
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Could not apply the policy.");
@@ -205,7 +205,7 @@ export function PolicyBuilder({
           disabled={!enabled || !policy}
           onClick={apply}
         >
-          Apply to playground
+          Apply to Advanced
         </button>
         <button type="button" disabled={!enabled || !policy} onClick={copy}>
           Copy JSON
