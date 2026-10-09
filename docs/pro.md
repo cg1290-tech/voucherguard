@@ -1,6 +1,6 @@
 # VoucherGuard Pro
 
-Pro is an optional, client-side holder toolkit for the future **$VG** token on **Solana mainnet-beta**. The free voucher playground, core SDK and CLI keep their existing functionality and require no wallet or network. Pro uses an optional Cloudflare Pages read-only RPC relay. It has no database, custody, token transfers, signing requests, subscriptions or paid APIs.
+Pro is an optional, client-side holder toolkit for the future **$VG** token on **Solana mainnet-beta**. Free Quick Check, Advanced Verification, core SDK and CLI keep their existing functionality. Advanced Verification and the SDK/CLI require no wallet. Quick Check and Pro use an optional Cloudflare Pages read-only RPC relay. It has no database, custody, token transfers, signing requests, subscriptions or paid APIs.
 
 ## Pre-launch behavior
 
@@ -48,7 +48,7 @@ The Builder validates through the core's exported `parsePolicyDocument` function
 
 **Standard example** enables finite expiry and trusted state without inventing a spending ceiling. **Conservative example** adds demonstrative values (1,000,000 cumulative base units, 100,000 increase, 30–300 seconds remaining). These are editable examples, not universal safe limits or security guarantees; adjust to the actual voucher token's units and risk model. The VG holder threshold is unrelated to a voucher's token amount.
 
-Preview the generated JSON, copy it or download `voucherguard-policy.json`. **Apply to playground** replaces only the policy and updates corresponding visual policy controls. Signed message, signature, authorized signer, trusted state, explicit time and unrelated document fields are preserved. Applying an invalid policy or malformed voucher document is rejected before modification. Missing expected channel/state can still produce INDETERMINATE.
+Preview the generated JSON, copy it or download `voucherguard-policy.json`. **Apply to Advanced** replaces only the policy and updates corresponding visual policy controls. Signed message, signature, authorized signer, trusted state, explicit time and unrelated document fields are preserved. Applying an invalid policy or malformed voucher document is rejected before modification. Missing expected channel/state can still produce INDETERMINATE.
 
 Batch Verification and Advanced Reports are labeled **Coming later / not implemented**. They are not available in this implementation and have no promised release date.
 
