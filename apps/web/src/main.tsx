@@ -12,8 +12,8 @@ import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import scenarios from "./fixtures.json";
 import "./style.css";
-import { Pro } from "./pro/Pro";
 import { loadProConfig, validateConfig } from "./pro/config";
+import { Pro } from "./pro/Pro";
 import { applyPolicyToDocument } from "./pro/policy";
 import { QuickCheck } from "./quick/QuickCheck";
 
