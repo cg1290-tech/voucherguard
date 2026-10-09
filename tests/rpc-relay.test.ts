@@ -32,7 +32,10 @@ describe("read-only Pages RPC relay", () => {
         body: JSON.stringify(genesis),
         credentials: "omit",
         redirect: "error",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "VoucherGuard/0.1 RPC relay",
+        },
       }),
     );
     expect(response.headers.get("Cache-Control")).toBe("no-store");
