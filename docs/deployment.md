@@ -37,9 +37,40 @@ The link is omitted by default rather than claiming a nonexistent public release
 
 The workflow grants deployment permissions only to the deploy job, uses a static artifact and does not publish npm packages. Change `VITE_BASE_PATH` for a renamed repository or a root/custom-domain deployment. The current workflow intentionally targets the prepared `voucherguard` repository name.
 
-## Vercel / Cloudflare static hosting
+## Cloudflare Pages (current production site)
 
-From monorepo root: install `pnpm install --frozen-lockfile`, build `pnpm build`, output directory `apps/web/dist`. Do not add functions or backend runtime. Set `VITE_REPOSITORY_URL` only to the actual repository. Hosting platform setup/submission is manual and has not been performed.
+The public site is **https://voucherguard.pages.dev/**. The Cloudflare Pages project `voucherguard` uses Direct Upload. Commits to GitHub do **not** automatically rebuild or deploy this project. No Cloudflare credential belongs in this repository or browser bundle.
+
+Build from the monorepo root for the root URL:
+
+```sh
+VITE_BASE_PATH=/ VITE_REPOSITORY_URL=https://github.com/cg1290-tech/voucherguard pnpm build
+```
+
+In the existing Cloudflare account, open Workers & Pages → `voucherguard` (Pages) → Create deployment. Choose Production and upload the **contents** of `apps/web/dist` (including `index.html`, `assets/`, the logo and `social-card.png`). Confirm the upload and deploy. Keep the prior successful deployment available for rollback.
+
+Verify the homepage, logo, social image URL, free playground scenarios and Pro's `Token access coming soon` state at the production URL. Open Graph and X card metadata point to this canonical domain; X may cache older previews.
+
+For CLI uploads, an account-scoped token with Cloudflare Pages Edit or a Wrangler session with Pages authorization is required. Configure credentials locally, never commit them. The existing Workers-only OAuth session cannot deploy Pages. After authorizing Pages, use:
+
+```sh
+wrangler pages deploy apps/web/dist --project-name=voucherguard --branch=main
+```
+
+## Cloudflare Workers fallback
+
+`wrangler.jsonc` configures a separate static-assets Worker named `voucherguard`. It is available at `https://voucherguard.cloudflare-plugin-migration.workers.dev/` and is updated separately from Pages:
+
+```sh
+wrangler deploy --config wrangler.jsonc --dry-run
+wrangler deploy --config wrangler.jsonc
+```
+
+Changing the account's `workers.dev` subdomain affects other Workers. Do not change it to customize this product's URL. GitHub Pages remains a separately deployed fallback.
+
+## Other static hosts
+
+From monorepo root: install `pnpm install --frozen-lockfile`, build `pnpm build`, output directory `apps/web/dist`. Serve static assets with no functions or backend runtime. Set `VITE_REPOSITORY_URL` to the actual repository and select the correct `VITE_BASE_PATH` for that host.
 
 ## npm package preparation
 

@@ -129,15 +129,20 @@ function App() {
       </a>
       <header>
         <a className="brand" href="#top">
-          Voucher<span>Guard</span>
-          <span className="brand-mark" aria-hidden="true">
-            {" "}
-            /{" "}
+          <img
+            className="brand-logo"
+            src={`${import.meta.env.BASE_URL}voucherguard-logo.jpg`}
+            alt=""
+            width="40"
+            height="40"
+          />
+          <span className="brand-name">
+            Voucher<span>Guard</span>
           </span>
         </a>
         <nav aria-label="Main">
-          <a href="#playground">Playground</a>
           <a href="#pro">Pro</a>
+          <a href="#playground">Playground</a>
           <a href="#documentation">Documentation</a>
           <a href="#scope">Security model</a>
           {repository && (
@@ -162,78 +167,71 @@ function App() {
               </span>
             </h1>
             <p className="lede">
-              Open-source verification for signed payment vouchers. Built for
-              the next generation of agentic payments.
+              Check signed payment vouchers before your application accepts
+              them. Free local verification today. A policy toolkit for future
+              $VG holders.
             </p>
             <div className="actions">
               <a className="primary" href="#playground">
                 Launch Playground <span aria-hidden="true">↗</span>
               </a>
-              {repository && (
-                <a className="secondary" href={repository}>
-                  View on GitHub ↗
-                </a>
-              )}
+              <a className="secondary" href="#pro">
+                Explore Pro →
+              </a>
             </div>
             <p className="hero-note">
-              Local execution · No wallet connection · MIT licensed
+              Free verifier: local execution · No wallet or RPC required
+              {repository && (
+                <a className="source-link" href={repository}>
+                  Open source · MIT · GitHub ↗
+                </a>
+              )}
             </p>
           </div>
-          <div
-            className="wire-panel"
-            role="img"
-            aria-label="Voucher format diagram"
+          <aside
+            className="product-overview"
+            aria-label="VoucherGuard products"
           >
-            <div className="panel-heading">
-              <span>SOLANA PAYMENT CHANNELS</span>
-              <span>50 BYTES</span>
-            </div>
-            <div className="wire-title">
-              Every byte
+            <img
+              src={`${import.meta.env.BASE_URL}voucherguard-logo.jpg`}
+              alt="VoucherGuard shield logo"
+              width="112"
+              height="112"
+            />
+            <p className="eyebrow">ONE PROJECT. TWO TOOLKITS.</p>
+            <h2>
+              Verification first.
               <br />
-              has a meaning.
-            </div>
-            <div className="byte-grid" aria-hidden="true">
-              {Array.from({ length: 50 }, (_, offset) => offset).map((i) => (
-                <span
-                  key={`byte-${i}`}
-                  className={
-                    i < 2
-                      ? "magic"
-                      : i < 34
-                        ? "channel-byte"
-                        : i < 42
-                          ? "amount-byte"
-                          : "expiry-byte"
-                  }
-                >
-                  {scenarios[0]?.document.message.value.slice(i * 2, i * 2 + 2)}
-                </span>
-              ))}
-            </div>
-            <dl className="wire-legend">
-              <div>
-                <dt>00—01 / DOMAIN</dt>
-                <dd>0x56 · Version 1</dd>
-              </div>
-              <div>
-                <dt>02—33 / CHANNEL</dt>
-                <dd>32-byte channel address</dd>
-              </div>
-              <div>
-                <dt>34—41 / AMOUNT</dt>
-                <dd>Unsigned u64 · Little-endian</dd>
-              </div>
-              <div>
-                <dt>42—49 / EXPIRATION</dt>
-                <dd>Signed i64 · Unix seconds</dd>
-              </div>
-            </dl>
-            <div className="wire-footer">
-              Exact signed bytes → Ed25519 → Trusted context
-            </div>
-          </div>
+              Your policies next.
+            </h2>
+            <a className="product-card" href="#playground">
+              <span className="small-label">FREE / AVAILABLE NOW</span>
+              <strong>
+                Voucher verification <span aria-hidden="true">↗</span>
+              </strong>
+              <p>
+                Inspect signatures, channels, expiration and spending limits in
+                your browser.
+              </p>
+            </a>
+            <a className="product-card" href="#pro">
+              <span className="small-label">
+                PRO / HOLDER ACCESS COMING SOON
+              </span>
+              <strong>
+                Policy Builder <span aria-hidden="true">↗</span>
+              </strong>
+              <p>
+                Build, export and apply verification policies. Planned access
+                for future $VG holders.
+              </p>
+            </a>
+            <p className="small muted">
+              Official $VG mint is not configured. Holder access is inactive.
+            </p>
+          </aside>
         </section>
+        <Pro onApply={applyProPolicy} />
         <section className="intro" id="scope">
           <h2>
             A signature proves intent.
@@ -249,8 +247,10 @@ function App() {
             </p>
             <p className="muted">
               Supports Solana Foundation payment channel V1 vouchers. This is
-              not a complete x402 verifier. No payment execution, custody, RPC
-              or backend.
+              not a complete x402 verifier. The free verifier executes locally,
+              with no wallet connection or RPC. Pro uses a read-only wallet
+              connection and public Solana RPC to check holder eligibility.
+              Neither component executes payments or takes custody.
             </p>
           </div>
         </section>
@@ -512,7 +512,6 @@ function App() {
             </div>
           </div>
         </section>
-        <Pro onApply={applyProPolicy} />
         <section id="documentation" className="docs">
           <div>
             <p className="eyebrow">ONE ENGINE. THREE ENVIRONMENTS.</p>
@@ -586,7 +585,9 @@ pnpm check`}</pre>
           Voucher<span>Guard</span>
         </span>
         <span>Verify what your AI agents sign.</span>
-        <span>Open source · MIT</span>
+        <a href="https://x.com/VoucherGuard" target="_blank" rel="noreferrer">
+          Official X · @VoucherGuard ↗
+        </a>
       </footer>
     </>
   );
