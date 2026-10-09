@@ -1,6 +1,6 @@
 # Security model
 
-VoucherGuard is security-sensitive, unaudited software. It has **not undergone an independent security audit**. A maintained cryptographic dependency does not make this application audited.
+VoucherGuard is security-sensitive software. It has **not undergone an independent security audit** and must not be treated as production-certified for consequential payment authorization. A maintained cryptographic dependency does not make this application audited. PASS reports and hosted Pro unlock are not security certifications.
 
 ## Threat model
 
@@ -48,4 +48,4 @@ Hosted Pro is gated by the Cloudflare Pages Worker, not by client UI alone. Unlo
 
 A signed challenge prevents unlocking by merely pasting someone else's address. The Worker re-checks holdings when serving Pro assets and `/api/pro/status`. No payment transaction is submitted. Failure or unavailable RPC data cannot grant access.
 
-The optional Pages relay (`/api/solana-rpc`) remains read-only (getGenesisHash, getAccountInfo, getTokenAccountsByOwner, getTransaction) with Origin checks, method-aware Helius use, and rate tiers as documented below. CORS is not authentication. Open-source forks can rebuild Policy Builder locally; that is outside the hosted product boundary. Do not treat Pro as protection for secrets, funds or privileged APIs beyond the hosted tool surface. The mint remains unset until independently confirmed after launch. See [Pro model and activation](docs/pro.md).
+The optional Pages relay (`/api/solana-rpc`) remains read-only (getGenesisHash, getAccountInfo, getTokenAccountsByOwner, getTransaction) with Origin checks, method-aware Helius use, and rate tiers as documented below. All `/api/*` routes also apply a shared per-IP Cache API throttle (60 requests/minute/colo), in addition to the relay's browser vs non-browser isolate tiers. CORS is not authentication. Open-source forks can rebuild Policy Builder locally; that is outside the hosted product boundary. Do not treat Pro as protection for secrets, funds or privileged APIs beyond the hosted tool surface. The mint remains unset until independently confirmed after launch. See [Pro model and activation](docs/pro.md).
