@@ -22,6 +22,10 @@ export type WorkerEnv = {
   VG_TOKEN_MINT?: string;
   VG_HOLDER_THRESHOLD?: string;
   PRO_SESSION_SECRET?: string;
+  /** Optional Cloudflare Rate Limiting binding for /api/*. */
+  API_RATE_LIMITER?: {
+    limit(options: { key: string }): Promise<{ success: boolean }>;
+  };
 };
 
 export const isKey = (v: unknown): v is string =>

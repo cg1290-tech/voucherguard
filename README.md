@@ -8,7 +8,9 @@ An open-source verification toolkit for **Solana Foundation payment channel V1 v
 
 AI agents can authorize spending. A valid signature alone does not establish that the authorization matches your channel, budget, clock or settlement watermark. VoucherGuard makes those checks explicit and reviewable.
 
-**Quick Check** uses a read-only public RPC relay. **Advanced Verification** (document lab) needs no wallet. Optional VoucherGuard Pro uses a read-only wallet connection for future $VG holder eligibility. No private-key collection, payment execution, telemetry or AI inference. Not an agent platform. Not a full x402 verifier. **Not independently audited.**
+**Quick Check** uses a read-only public RPC relay. **Advanced Verification** (document lab) needs no wallet. Optional **VoucherGuard Pro** is Cloudflare Worker–gated for future $VG holders (signed challenge + on-chain balance); Policy Builder is served only with a valid holder session. No private-key collection, payment execution, telemetry or AI inference. Not an agent platform. Not a full x402 verifier.
+
+**Not independently audited.** Do not treat PASS reports, Pro unlock, or this software as a security certification for consequential payment authorization.
 
 ![Site preview](docs/preview-desktop.png)
 
@@ -106,15 +108,13 @@ All example documents are simulations with a public test-only seed and explicit 
 
 ## VoucherGuard Pro (pre-launch)
 
-Optional holder toolkit for the future **$VG** token. The official mint is **unset by default**: production shows **Token access coming soon**, and wallet connection alone never unlocks tools. Free Quick Check and Advanced Verification stay available without holder access.
+Optional holder toolkit for the future **$VG** token. Hosted unlock is enforced by the Cloudflare Pages Worker: wallet `signMessage` over a challenge, live SPL balance check against Pages secrets (`VG_TOKEN_MINT`, `VG_HOLDER_THRESHOLD`, `PRO_SESSION_SECRET`), then an HttpOnly session. **`/pro.html` and `/pro/*` are refused without that session.** The official mint is **unset by default**, so production shows **Token access coming soon**. Free Quick Check and Advanced Verification stay available without holder access.
 
-Pro discovers Wallet Standard-compatible Solana wallets using the official `@wallet-standard` libraries. It requests only a public account, verifies the RPC is mainnet-beta, reads mint decimals and exact-owner/exact-mint SPL Token or Token-2022 accounts, and aggregates raw amounts with BigInt. The default threshold is one whole token; malformed configuration, missing data, unsupported networks and RPC errors close access. Account changes and manual refresh recheck holdings without periodic polling or signing.
+Connect uses Wallet Standard. Pro asks for a one-time message signature to prove address control—no payment transaction. Holdings are re-checked when serving Pro tools. See [configuration and activation](docs/pro.md).
 
-The working **Policy Builder** provides amount/increase caps, finite expiry, validity windows, trusted-state requirement and expected channel controls. It uses the core policy schema, previews/copies/downloads JSON and applies only the policy to Advanced Verification while preserving signed bytes, signature and supplied state. Standard/Conservative presets are editable examples, not security guarantees. Batch Verification and Advanced Reports are explicitly planned and unimplemented.
+The **Policy Builder** (amount/increase caps, expiry windows, trusted-state requirement, expected channel) uses the core policy schema and can apply a policy to Advanced Verification without altering signed bytes. Standard/Conservative presets are editable examples, not security guarantees. Batch Verification and Advanced Reports are not implemented.
 
-Configure public build variables `VITE_VG_TOKEN_MINT`, `VITE_VG_RPC_URL`, `VITE_VG_HOLDER_THRESHOLD` and `VITE_VG_NETWORK` after independently confirming the official mint. The manual GitHub Pages workflow accepts matching repository variables `VG_TOKEN_MINT`, `VG_RPC_URL`, `VG_HOLDER_THRESHOLD` and `VG_NETWORK`. No mint variable means no holder access. See [configuration, activation and test procedure](docs/pro.md).
-
-**Client-side gating is bypassable.** Bundled JavaScript cannot protect secrets, privileged APIs or exclusive IP. The gate is a convenience feature, not cryptographic wallet authentication or a settlement/security guarantee. Tests provide injected wallet/RPC fixtures outside production code; no development bypass is shipped.
+Do **not** put the holder mint in public `VITE_*` build vars for access control. Worker Pages secrets are authoritative. Open-source forks can rebuild Policy Builder offline; that is outside the hosted gate. Pro is not authentication for secrets, funds or privileged APIs beyond the hosted tool surface.
 
 ## Results and security boundaries
 
@@ -165,6 +165,6 @@ Initial Playwright browser installation downloads a test browser; this is a deve
 
 ## Roadmap and contributions
 
-Before a stable production release: independent security review and maintainer verification of the protocol pin and release metadata. Private vulnerability reporting is enabled on the repository. Future scope may include additional independently tested protocol profiles; no generic multi-chain or comprehensive x402 support is promised.
+**Independent security audit has not been completed.** Before relying on VoucherGuard for consequential payment authorization: commission an independent review and verify the protocol pin and release metadata yourself. Private vulnerability reporting is enabled on the repository. Future scope may include additional independently tested protocol profiles; no generic multi-chain or comprehensive x402 support is promised.
 
 Contributions should include protocol evidence and tests for security behavior. Read [CONTRIBUTING.md](CONTRIBUTING.md). MIT license; no endorsements, adoption claims or audit certification.

@@ -49,7 +49,7 @@ VITE_BASE_PATH=/ VITE_REPOSITORY_URL=https://github.com/cg1290-tech/voucherguard
 
 In the existing Cloudflare account, open Workers & Pages → `voucherguard` (Pages) → Create deployment. Choose Production and upload the **contents** of `apps/web/dist` (including `index.html`, `assets/`, the logo, `social-card.png`, `_worker.js` and `_routes.json`). Include the `_headers` file: Cloudflare applies its Content Security Policy, frame restrictions and browser permission restrictions. The policy permits only the same origin and canonical Pages relay; if a different RPC endpoint is configured, update `connect-src` to that exact trusted origin before building. Vite preview and GitHub Pages do not apply this Cloudflare header file. Confirm the upload and deploy. Keep the prior successful deployment available for rollback.
 
-Verify the homepage, logo, social image URL, Quick Check, Advanced Verification fixtures and Pro's `Token access coming soon` state (no mint variable) at the production URL. Open Graph and X card metadata point to this canonical domain; X may cache older previews.
+Verify the homepage, logo, social image URL, Quick Check, Advanced Verification fixtures, the unaudited disclaimer, and Pro's `Token access coming soon` state (no `VG_TOKEN_MINT` Pages secret) at the production URL. Open Graph and X card metadata point to this canonical domain; X may cache older previews.
 
 For CLI uploads, an account-scoped token with Cloudflare Pages Edit or a Wrangler session with Pages authorization is required. Configure credentials locally, never commit them. The existing Workers-only OAuth session cannot deploy Pages. After authorizing Pages, use:
 
@@ -90,4 +90,11 @@ Pages secrets (Worker env, never `VITE_*`):
 
 Without mint + session secret, Pro stays locked (`not-configured`). With them set, holders prove access via `/api/pro/challenge` + `/api/pro/session`; Policy Builder is only at `/pro.html` behind the session cookie.
 
-The RPC relay requires an allowlisted Origin, allows only getGenesisHash, getAccountInfo, getTokenAccountsByOwner and getTransaction, prefers Helius only for token-account reads, and rate-limits non-browser clients more tightly. Worker fetch must use `redirect: "manual"`. Vite preview and GitHub Pages do not run this worker—hosted Pro unlock only works on Cloudflare Pages. Optionally add a Cloudflare rate-limiting rule on `/api/*` for defense in depth.
+The RPC relay requires an allowlisted Origin, allows only getGenesisHash, getAccountInfo, getTokenAccountsByOwner and getTransaction, prefers Helius only for token-account reads, and rate-limits non-browser clients more tightly. All `/api/*` routes also share a per-IP Cache API throttle (60 requests/minute/colo; Pages does not yet accept Workers `ratelimits` bindings in `wrangler.jsonc`). Worker fetch must use `redirect: "manual"`. Vite preview and GitHub Pages do not run this worker—hosted Pro unlock only works on Cloudflare Pages.
+
+```sh
+pnpm --filter @voucherguard/web build
+wrangler pages deploy --project-name voucherguard --branch main
+```
+
+(`wrangler.jsonc` sets `pages_build_output_dir` to `apps/web/dist`.)
