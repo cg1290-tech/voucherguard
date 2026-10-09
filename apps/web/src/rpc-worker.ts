@@ -143,7 +143,10 @@ export function createRpcRelay(fetcher: typeof fetch = fetch) {
       try {
         const response = await fetcher(UPSTREAM, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "VoucherGuard/0.1 RPC relay",
+          },
           body: JSON.stringify(rpc),
           signal: controller.signal,
           credentials: "omit",
@@ -152,7 +155,7 @@ export function createRpcRelay(fetcher: typeof fetch = fetch) {
         });
         if (!response.ok) {
           await response.body?.cancel();
-          return reply(502, "RPC unavailable");
+          return reply(502, `RPC upstream unavailable (${response.status})`);
         }
         const bytes = await boundedBytes(response.body, MAX_RESPONSE);
         JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
