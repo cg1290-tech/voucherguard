@@ -1,5 +1,8 @@
-/** Optional Pages relay: fixed public upstream and read-only methods only. */
-const UPSTREAM = "https://solana-rpc.publicnode.com";
+/** Optional Pages relay: fixed public upstreams and read-only methods only. */
+const FALLBACK_UPSTREAMS = [
+  "https://api.mainnet-beta.solana.com",
+  "https://solana-rpc.publicnode.com",
+] as const;
 const MAX_BODY = 4096;
 const MAX_RESPONSE = 1024 * 1024;
 const ORIGINS = new Set([
@@ -11,6 +14,15 @@ const key = (v: unknown): v is string =>
   typeof v === "string" && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v);
 const obj = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === "object" && !Array.isArray(v);
+function upstreams(env: { HELIUS_API_KEY?: string }): string[] {
+  const helius = env.HELIUS_API_KEY?.trim();
+  if (helius)
+    return [
+      `https://mainnet.helius-rpc.com/?api-key=${helius}`,
+      ...FALLBACK_UPSTREAMS,
+    ];
+  return [...FALLBACK_UPSTREAMS];
+}
 async function boundedBytes(
   body: ReadableStream<Uint8Array> | null,
   max: number,
@@ -46,7 +58,10 @@ export function createRpcRelay(fetcher: typeof fetch = fetch) {
   return {
     async fetch(
       request: Request,
-      env: { ASSETS: { fetch(request: Request): Promise<Response> } },
+      env: {
+        ASSETS: { fetch(request: Request): Promise<Response> };
+        HELIUS_API_KEY?: string;
+      },
     ) {
       const url = new URL(request.url);
       if (url.pathname !== "/api/solana-rpc") return env.ASSETS.fetch(request);
@@ -141,25 +156,66 @@ export function createRpcRelay(fetcher: typeof fetch = fetch) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 8000);
       try {
-        const response = await fetcher(UPSTREAM, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "User-Agent": "VoucherGuard/0.1 RPC relay",
-          },
-          body: JSON.stringify(rpc),
-          signal: controller.signal,
-          credentials: "omit",
-          referrerPolicy: "no-referrer",
-          redirect: "error",
-        });
-        if (!response.ok) {
-          await response.body?.cancel();
-          return reply(502, `RPC upstream unavailable (${response.status})`);
+        let lastStatus = 0;
+        // Workers only allow redirect "follow" | "manual". "error" throws at the edge.
+        for (const upstream of upstreams(env)) {
+          let response: Response;
+          try {
+            response = await fetcher(upstream, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "User-Agent": "VoucherGuard/0.1 RPC relay",
+              },
+              body: JSON.stringify(rpc),
+              signal: controller.signal,
+              credentials: "omit",
+              referrerPolicy: "no-referrer",
+              redirect: "manual",
+            });
+          } catch {
+            continue;
+          }
+          if (
+            response.type === "opaqueredirect" ||
+            (response.status >= 300 && response.status < 400)
+          ) {
+            await response.body?.cancel();
+            lastStatus = response.status;
+            continue;
+          }
+          if (!response.ok) {
+            lastStatus = response.status;
+            await response.body?.cancel();
+            continue;
+          }
+          const bytes = await boundedBytes(response.body, MAX_RESPONSE);
+          let parsed: unknown;
+          try {
+            parsed = JSON.parse(
+              new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+            );
+          } catch {
+            lastStatus = 502;
+            continue;
+          }
+          // Some free RPCs return HTTP 200 with a JSON-RPC error for indexed methods.
+          if (
+            obj(parsed) &&
+            parsed.error !== undefined &&
+            !("result" in parsed)
+          ) {
+            lastStatus = 502;
+            continue;
+          }
+          return new Response(bytes, { status: 200, headers });
         }
-        const bytes = await boundedBytes(response.body, MAX_RESPONSE);
-        JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-        return new Response(bytes, { status: 200, headers });
+        return reply(
+          502,
+          lastStatus
+            ? `RPC upstream unavailable (${lastStatus})`
+            : "RPC unavailable",
+        );
       } catch {
         return reply(502, "RPC unavailable");
       } finally {
