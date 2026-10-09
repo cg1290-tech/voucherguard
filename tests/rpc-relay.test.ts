@@ -3,7 +3,6 @@ import { createRpcRelay } from "../apps/web/src/rpc-worker";
 
 const env = {
   ASSETS: { fetch: async () => new Response("asset") },
-  HELIUS_API_KEY: undefined as string | undefined,
 };
 const request = (body: unknown, origin = "https://voucherguard.pages.dev") =>
   new Request("https://voucherguard.pages.dev/api/solana-rpc", {
