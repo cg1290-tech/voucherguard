@@ -2,6 +2,7 @@ import type { PolicyDocument } from "@voucherguard/core";
 import { serializeReport } from "@voucherguard/core";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { proApiBase } from "./pro-session";
+import { TransactionInsights } from "./TransactionInsights";
 import {
   type TransactionReview as Review,
   reviewTransaction,
@@ -106,9 +107,9 @@ export function TransactionReview({
       <p className="eyebrow">START HERE</p>
       <h2 id="pro-link-title">One link. A clear review.</h2>
       <p>
-        Paste a Solscan transaction link. We retrieve the transaction, extract
-        supported payment voucher evidence and check its signature. No files or
-        technical setup needed.
+        Paste a Solscan transaction link. Check recorded balances, costs and
+        selected permissions, plus payment voucher evidence when present. No
+        files or technical setup needed.
       </p>
       <form onSubmit={(e) => void run(e)}>
         <label htmlFor="pro-transaction-link">Solscan transaction link</label>
@@ -167,6 +168,9 @@ export function TransactionReview({
               >
                 Transaction {row.signature.slice(0, 10)}… ↗
               </a>
+              {row.review?.insights && (
+                <TransactionInsights insights={row.review.insights} />
+              )}
               {row.error ? (
                 <p role="alert">{row.error}</p>
               ) : result?.kind !== "historical" ? (
@@ -178,9 +182,10 @@ export function TransactionReview({
                   </h3>
                   <p>{result?.message}</p>
                   <p className="small muted">
-                    This is not a PASS or a safety verdict. VoucherGuard reviews
-                    Payment Channels V1 settlement vouchers, not ordinary swaps
-                    or token transfers.
+                    Voucher proof is limited to Payment Channels V1 settlements.
+                    Pro still shows recorded transaction effects above for swaps
+                    and transfers. These findings are not a safety
+                    certification.
                   </p>
                 </>
               ) : (
