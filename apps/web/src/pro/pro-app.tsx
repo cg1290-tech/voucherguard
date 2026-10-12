@@ -7,6 +7,7 @@ import {
   type ProSessionState,
   stashPolicyForAdvanced,
 } from "./pro-session";
+import { TransactionReview } from "./TransactionReview";
 import { Workbench } from "./Workbench";
 import "./pro.css";
 import "../style.css";
@@ -45,7 +46,7 @@ function ProTools() {
         <div>
           <p className="eyebrow">VOUCHERGUARD PRO</p>
           <h1>Your verification workspace.</h1>
-          <p>Reusable policies. Batch checks. Evidence you can export.</p>
+          <p>Paste a Solscan link. Review the evidence. Export your results.</p>
           <p className="small muted">
             Holder session verified for{" "}
             <code>{session.address?.slice(0, 8)}…</code>
@@ -53,16 +54,23 @@ function ProTools() {
         </div>
         <a href="/#pro">Back to unlock</a>
       </header>
-      <PolicyBuilder
-        enabled
-        owner={session.address || "local"}
-        onPolicy={setPolicy}
-        onApply={(policy: PolicyDocument) => {
-          stashPolicyForAdvanced(policy);
-          window.location.href = "/#playground";
-        }}
-      />
-      <Workbench policy={policy} />
+      <TransactionReview policy={policy} />
+      <details className="pro-file-tools">
+        <summary>Optional: custom rules & saved policies</summary>
+        <PolicyBuilder
+          enabled
+          owner={session.address || "local"}
+          onPolicy={setPolicy}
+          onApply={(policy: PolicyDocument) => {
+            stashPolicyForAdvanced(policy);
+            window.location.href = "/#playground";
+          }}
+        />
+      </details>
+      <details className="pro-file-tools">
+        <summary>Advanced: voucher files & simulations</summary>
+        <Workbench policy={policy} />
+      </details>
     </main>
   );
 }
