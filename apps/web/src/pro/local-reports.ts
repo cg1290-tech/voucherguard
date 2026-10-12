@@ -13,6 +13,7 @@ export interface LocalReport {
   balances: string[];
   coverage: string[];
   evidence: string;
+  transactionRules?: string;
 }
 export const HISTORY_LIMIT = 20;
 const MAX_STORAGE = 2_000_000;
@@ -29,6 +30,7 @@ export function snapshot(review: TransactionReview): LocalReport {
         ? review.result.voucherReport.status
         : "Outside supported scope",
     policy: review.policyReport?.status ?? "Not checked",
+    transactionRules: review.transactionRules?.status ?? "Not checked",
     fee:
       review.insights.feeLamports === undefined
         ? "Unavailable"
@@ -59,6 +61,8 @@ function valid(v: unknown): v is LocalReport {
       "fee",
       "evidence",
     ].every((k) => typeof r[k] === "string") &&
+    (r.transactionRules === undefined ||
+      typeof r.transactionRules === "string") &&
     typeof r.signature === "string" &&
     /^[1-9A-HJ-NP-Za-km-z]{80,100}$/.test(r.signature) &&
     typeof r.savedAt === "string" &&
@@ -105,6 +109,11 @@ export function comparison(a: LocalReport, b: LocalReport) {
     ["Custom policy result", a.policy, b.policy],
     ["Network fee", a.fee, b.fee],
     [
+      "Transaction rules",
+      a.transactionRules ?? "Not checked",
+      b.transactionRules ?? "Not checked",
+    ],
+    [
       "Net account balance changes",
       a.balances.join("\n") || "None available",
       b.balances.join("\n") || "None available",
@@ -148,7 +157,7 @@ export async function downloadCard(report: LocalReport) {
     `Report saved: ${report.savedAt}`,
     `Execution: ${report.execution}`,
     `Voucher proof: ${report.voucher}`,
-    `Custom policy: ${report.policy}`,
+    `Custom policy: ${report.policy} · Rules: ${report.transactionRules ?? "Not checked"}`,
     `Network fee: ${report.fee}`,
     `Decoded account operations: ${report.operations.length}`,
     `Coverage notes / warnings: ${report.coverage.length}`,

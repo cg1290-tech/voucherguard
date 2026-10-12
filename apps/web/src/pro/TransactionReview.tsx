@@ -4,11 +4,19 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { LocalReports } from "./LocalReports";
 import { proApiBase } from "./pro-session";
 import { TransactionInsights } from "./TransactionInsights";
+import { RulePreferences, RuleResults } from "./TransactionRules";
 import {
   type TransactionReview as Review,
   reviewTransaction,
   transactionLinks,
 } from "./transaction-review";
+import {
+  DEFAULT_RULES,
+  evaluateRules,
+  loadRules,
+  saveRules,
+  type TransactionRules,
+} from "./transaction-rules";
 
 type Row = { signature: string; review?: Review; error?: string };
 const RPC = `${proApiBase()}/api/solana-rpc`;
@@ -19,6 +27,36 @@ export function TransactionReview({
   owner: string;
   policy: PolicyDocument | undefined;
 }) {
+  const [initialRules] = useState(() => {
+    try {
+      return loadRules(owner, localStorage);
+    } catch {
+      return {
+        rules: structuredClone(DEFAULT_RULES),
+        saved: false,
+        notice:
+          "Local storage unavailable. Preferences apply only for this visit.",
+      };
+    }
+  });
+  const [rules, setRules] = useState(initialRules.rules);
+  const [rulesSaved, setRulesSaved] = useState(initialRules.saved);
+  const [rulesNotice, setRulesNotice] = useState(initialRules.notice);
+  function storeRules(next: TransactionRules) {
+    setRules(next);
+    try {
+      saveRules(owner, next, localStorage);
+      setRulesSaved(true);
+      setRulesNotice(
+        "Preferences saved. They will apply automatically to the next review.",
+      );
+    } catch {
+      setRulesSaved(false);
+      setRulesNotice(
+        "Storage unavailable. These preferences are active for this visit only; they could not be saved.",
+      );
+    }
+  }
   const [input, setInput] = useState("");
   const [usePolicy, setUsePolicy] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
@@ -40,6 +78,7 @@ export function TransactionReview({
     }
     const controller = new AbortController();
     abort.current = controller;
+    const capturedRules = structuredClone(rules);
     const captured = usePolicy && policy ? structuredClone(policy) : undefined;
     setBusy(true);
     setRows([]);
@@ -62,6 +101,7 @@ export function TransactionReview({
           captured,
           fetcher,
         );
+        review.transactionRules = evaluateRules(review.insights, capturedRules);
         next.push({ signature, review });
       } catch (e) {
         if (controller.signal.aborted) break;
@@ -114,6 +154,14 @@ export function TransactionReview({
         selected permissions, plus payment voucher evidence when present. No
         files or technical setup needed.
       </p>
+      <RulePreferences
+        rules={rules}
+        saved={rulesSaved}
+        busy={busy}
+        notice={rulesNotice}
+        onSave={storeRules}
+        programs={rows.flatMap((row) => row.review?.insights.programs ?? [])}
+      />
       <form onSubmit={(e) => void run(e)}>
         <label htmlFor="pro-transaction-link">Solscan transaction link</label>
         <textarea
@@ -155,6 +203,10 @@ export function TransactionReview({
           />{" "}
           Also check my custom policy
         </label>
+        <p className="small muted">
+          Custom voucher policies apply to supported payment-channel vouchers.
+          Your transaction rules apply to every reviewed transaction.
+        </p>
       </form>
       <p role="status" className="pro-notice">
         {notice}
@@ -171,6 +223,9 @@ export function TransactionReview({
               >
                 Transaction {row.signature.slice(0, 10)}… ↗
               </a>
+              {row.review?.transactionRules && (
+                <RuleResults report={row.review.transactionRules} />
+              )}
               {row.review?.insights && (
                 <TransactionInsights insights={row.review.insights} />
               )}

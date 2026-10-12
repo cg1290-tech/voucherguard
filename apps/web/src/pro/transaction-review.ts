@@ -17,7 +17,10 @@ import {
   type TransactionInsights,
 } from "./transaction-insights";
 
+import type { RuleReport } from "./transaction-rules";
+
 export interface TransactionReview {
+  transactionRules?: RuleReport;
   insights: TransactionInsights;
   signature: string;
   result: QuickExtractResult;

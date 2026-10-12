@@ -44,6 +44,8 @@ export interface PermissionEvent {
 }
 export interface TransactionInsights {
   success: boolean;
+  programsComplete: boolean;
+  permissionsComplete: boolean;
   feeLamports?: string;
   feePayer?: string;
   feePayerNetLamports?: string;
@@ -69,6 +71,10 @@ export function inspectTransaction(value: unknown): TransactionInsights {
   ].map(key);
   const out: TransactionInsights = {
     success: meta.err === null,
+    programsComplete:
+      Array.isArray(message.instructions) &&
+      Array.isArray(meta.innerInstructions),
+    permissionsComplete: false,
     balanceChanges: [],
     permissionEvents: [],
     programs: [],
@@ -218,7 +224,14 @@ export function inspectTransaction(value: unknown): TransactionInsights {
     );
   for (const group of list(meta.innerInstructions)) {
     const g = obj(group);
+    if (
+      !Number.isSafeInteger(g.index) ||
+      Number(g.index) < 0 ||
+      Number(g.index) >= list(message.instructions).length
+    )
+      out.programsComplete = false;
     if (!Array.isArray(g.instructions)) {
+      out.programsComplete = false;
       out.coverage.push("Malformed inner-instruction trace.");
       continue;
     }
@@ -231,6 +244,7 @@ export function inspectTransaction(value: unknown): TransactionInsights {
     });
   }
   if (instructions.length > 2000) {
+    out.programsComplete = false;
     out.coverage.push("Instruction inspection limit reached.");
     instructions.length = 2000;
   }
@@ -243,6 +257,7 @@ export function inspectTransaction(value: unknown): TransactionInsights {
           ? keys[index]
           : undefined;
     if (!pid) {
+      out.programsComplete = false;
       out.coverage.push(`${position}: program address could not be resolved.`);
       continue;
     }
@@ -261,10 +276,19 @@ export function inspectTransaction(value: unknown): TransactionInsights {
       const data = base58.decode(ix.data),
         op = data[0];
       const minimum = (
-        { 4: 3, 13: 4, 6: 2, 9: 3, 8: 3, 15: 3, 10: 3, 5: 2 } as Record<
-          number,
-          number
-        >
+        {
+          3: 3,
+          12: 4,
+          17: 1,
+          4: 3,
+          13: 4,
+          6: 2,
+          9: 3,
+          8: 3,
+          15: 3,
+          10: 3,
+          5: 2,
+        } as Record<number, number>
       )[op ?? -1];
       if (minimum !== undefined && accounts.length < minimum) throw Error();
       const event = (action: string, details: string) => {
@@ -283,7 +307,11 @@ export function inspectTransaction(value: unknown): TransactionInsights {
           .getBigUint64(1, true)
           .toString();
       };
-      if (op === 4 || op === 13) {
+      // Known transfer/sync instructions do not create the selected delegation or SetAuthority operations.
+      // SPL encoding reference: https://github.com/solana-program/token/blob/main/interface/src/instruction.rs
+      if (op === 3 || op === 12 || op === 17) {
+        if (data.length !== (op === 3 ? 9 : op === 12 ? 10 : 1)) throw Error();
+      } else if (op === 4 || op === 13) {
         const delegate = accounts[op === 13 ? 2 : 1];
         if (!delegate || data.length !== (op === 13 ? 10 : 9)) throw Error();
         event(
@@ -327,6 +355,7 @@ export function inspectTransaction(value: unknown): TransactionInsights {
       unknownTokens++;
     }
   }
+  out.permissionsComplete = out.programsComplete && unknownTokens === 0;
   if (unknownTokens)
     out.coverage.push(
       `${unknownTokens} token instruction(s) not decoded by the permission inspector, including unsupported Token-2022 extensions.`,
