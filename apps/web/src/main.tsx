@@ -181,7 +181,7 @@ function App() {
             <p className="lede">
               Paste a Solscan transaction or import a signed voucher. Verify
               Payment Channels evidence in your browser. A policy toolkit for
-              future $VG holders.
+              $VG holders on Solana.
             </p>
             <div className="actions">
               <a className="primary" href="#quick-check">
@@ -240,6 +240,11 @@ function App() {
             </a>
             <p className="small muted">
               Pro tools are served only with a Worker-issued holder session.
+            </p>
+            <p className="small muted">
+              <a href="https://pump.fun/coin/6haciZiuNuUvBvUnJa6SFB7bsxnpoW3Bz4R2cmpRpump">
+                Official $VG token on Solana ↗
+              </a>
             </p>
           </aside>
         </section>
