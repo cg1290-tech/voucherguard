@@ -122,7 +122,8 @@ export function LocalReports({
             <strong>{r.signature.slice(0, 12)}…</strong> ·{" "}
             {new Date(r.savedAt).toLocaleString()}
             <br />
-            {r.execution} · Voucher: {r.voucher} · Fee: {r.fee}
+            {r.execution} · Voucher: {r.voucher} · Fee: {r.fee} · Rules:{" "}
+            {r.transactionRules ?? "Not checked"}
           </p>
           <div className="pro-link-actions">
             <button
@@ -159,6 +160,11 @@ export function LocalReports({
             <div>
               <p>Transaction: {r.signature}</p>
               <p>Custom policy: {r.policy}</p>
+              <p>
+                Transaction rules: {r.transactionRules ?? "Not checked"}.
+                Captured preferences and checks are included in the downloaded
+                evidence.
+              </p>
               <h4>Recorded operations</h4>
               {r.operations.length ? (
                 [...new Set(r.operations)].map((o) => <p key={o}>{o}</p>)

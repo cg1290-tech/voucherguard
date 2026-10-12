@@ -744,3 +744,38 @@
   overflow-wrap: anywhere;
   max-width: 22rem;
 }
+
+.pro-rule-preferences {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid #344337;
+  border-radius: 10px;
+}
+.pro-rule-preferences summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.pro-rule-preferences fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border: 0;
+  padding: 0;
+}
+.pro-rule-preferences input:not([type="checkbox"]),
+.pro-rule-preferences textarea {
+  width: 100%;
+  padding: 0.8rem;
+  background: #090d0c;
+  color: #e9eee9;
+  border: 1px solid #52654b;
+  border-radius: 6px;
+}
+.pro-rule-results {
+  padding: 1rem;
+  margin: 1rem 0;
+  background: #142017;
+  border: 1px solid #52654b;
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+}

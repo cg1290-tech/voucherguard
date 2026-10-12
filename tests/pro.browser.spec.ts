@@ -543,3 +543,83 @@ test("local Pro history, cards and comparisons do not make extra RPC requests", 
   await page.getByRole("button", { name: "Clear local history" }).click();
   await expect(page.locator(".pro-saved-report")).toHaveCount(0);
 });
+
+test("transaction rules persist and use existing RPC evidence with immutable exported preferences", async ({
+  page,
+}) => {
+  await mockProStatus(page, {
+    status: "eligible",
+    message: "Verified",
+    address: address(9),
+  });
+  const fixture = await readFile("tests/fixtures/settle-tx.json", "utf8");
+  let calls = 0;
+  await page.route("**/api/solana-rpc", async (route) => {
+    calls++;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: fixture,
+    });
+  });
+  await page.goto("./pro.html");
+  await page.getByText(/My transaction rules/).click();
+  await page
+    .getByLabel("Maximum network fee / SOL (optional)")
+    .fill("0.000001");
+  await page
+    .getByRole("button", { name: "Save transaction preferences" })
+    .click();
+  expect(calls).toBe(0);
+  const link =
+    "https://solscan.io/tx/4wMpYs4wHJX8ArjcTBqZ9pTV1erxAJiqHbUsHkUq44kb8wELDZtRem3k2ZjYQW4kF99TPXe4HhR8hRHJ29DbAvTa";
+  await page.getByLabel("Solscan transaction link").fill(link);
+  await page
+    .getByRole("button", { name: "Review transaction", exact: true })
+    .click();
+  await expect(page.getByTestId("transaction-rule-results")).toContainText(
+    "Your rules flagged",
+  );
+  expect(calls).toBe(1);
+  await page.getByLabel("Maximum network fee / SOL (optional)").fill("0.00001");
+  await page
+    .getByRole("button", { name: "Use programs from current reviews" })
+    .click();
+  await page
+    .getByRole("button", { name: "Save transaction preferences" })
+    .click();
+  await expect(page.getByTestId("transaction-rule-results")).toContainText(
+    "Your rules flagged",
+  );
+  expect(calls).toBe(1);
+  const pending = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download review", exact: true })
+    .click();
+  const download = await pending;
+  const path = await download.path();
+  if (!path) throw Error("Missing export");
+  const exported = JSON.parse(await readFile(path, "utf8"));
+  expect(exported.results[0].review.transactionRules.rules.maxFeeSol).toBe(
+    "0.000001",
+  );
+  await page.reload();
+  await page.getByText(/My transaction rules/).click();
+  await expect(
+    page.getByLabel("Maximum network fee / SOL (optional)"),
+  ).toHaveValue("0.00001");
+  await expect(page.getByLabel("Only allow my saved programs")).toBeChecked();
+  expect(calls).toBe(1);
+  await page.getByLabel("Solscan transaction link").fill(link);
+  await page
+    .getByRole("button", { name: "Review transaction", exact: true })
+    .click();
+  await expect(page.getByTestId("transaction-rule-results")).toContainText(
+    "Within your checked rules",
+  );
+  expect(calls).toBe(2);
+  await page.screenshot({
+    path: "../VoucherGuard-Pro-transaction-rules.png",
+    fullPage: true,
+  });
+});
