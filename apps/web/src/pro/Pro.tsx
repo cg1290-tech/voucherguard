@@ -299,8 +299,8 @@ export function Pro() {
             <p className="small-label">HOLDER TOOL / SERVER GATED</p>
             <h3>Policy Builder</h3>
             <p>
-              Served from a Worker-protected route only after an on-chain holder
-              session is issued.
+              Save policy revisions, import voucher files, run batch checks and
+              export detailed evidence from your holder workspace.
             </p>
             <span className="pro-tool-label">
               Locked until the Worker verifies $VG holdings

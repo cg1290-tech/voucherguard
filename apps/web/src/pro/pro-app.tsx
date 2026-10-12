@@ -7,10 +7,12 @@ import {
   type ProSessionState,
   stashPolicyForAdvanced,
 } from "./pro-session";
+import { Workbench } from "./Workbench";
 import "./pro.css";
 import "../style.css";
 
 function ProTools() {
+  const [policy, setPolicy] = useState<PolicyDocument | undefined>();
   const [session, setSession] = useState<ProSessionState>({
     status: "checking",
     message: "Confirming holder session…",
@@ -42,7 +44,8 @@ function ProTools() {
       <header className="pro-tools-header">
         <div>
           <p className="eyebrow">VOUCHERGUARD PRO</p>
-          <h1>Policy Builder</h1>
+          <h1>Your verification workspace.</h1>
+          <p>Reusable policies. Batch checks. Evidence you can export.</p>
           <p className="small muted">
             Holder session verified for{" "}
             <code>{session.address?.slice(0, 8)}…</code>
@@ -52,11 +55,14 @@ function ProTools() {
       </header>
       <PolicyBuilder
         enabled
+        owner={session.address || "local"}
+        onPolicy={setPolicy}
         onApply={(policy: PolicyDocument) => {
           stashPolicyForAdvanced(policy);
-          window.location.href = "/#";
+          window.location.href = "/#playground";
         }}
       />
+      <Workbench policy={policy} />
     </main>
   );
 }
