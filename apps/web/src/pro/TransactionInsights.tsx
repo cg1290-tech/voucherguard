@@ -116,6 +116,29 @@ export function TransactionInsights({ insights }: { insights: Insights }) {
         </div>
       )}
       <details>
+        <summary>What do these checks mean?</summary>
+        <p>
+          Delegation: an instruction authorizes a delegate to spend a specified
+          token amount. This report records that instruction; it does not
+          confirm that the permission is still active.
+        </p>
+        <p>
+          Authority change: control over a token account or mint may move to
+          another address. Check the operation details to understand which
+          authority changed.
+        </p>
+        <p>
+          Freeze: an instruction can restrict transfers from a token account.
+          Burn removes tokens; close removes an account and returns its rent
+          balance.
+        </p>
+        <p>
+          Failed execution: instruction effects were not applied, although the
+          network fee may still have been charged. Missing coverage means a
+          check could not be completed, not that it passed.
+        </p>
+      </details>
+      <details>
         <summary>Programs, fee payer & coverage</summary>
         <p className="small muted">
           Fee payer: {insights.feePayer ?? "Unavailable"}
