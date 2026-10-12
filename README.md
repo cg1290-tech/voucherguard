@@ -8,7 +8,7 @@ An open-source verification toolkit for **Solana Foundation payment channel V1 v
 
 AI agents can authorize spending. A valid signature alone does not establish that the authorization matches your channel, budget, clock or settlement watermark. VoucherGuard makes those checks explicit and reviewable.
 
-**Quick Check** uses a read-only public RPC relay. **Advanced Verification** (document lab) needs no wallet. Optional **VoucherGuard Pro** is Cloudflare Worker–gated for future $VG holders (signed challenge + on-chain balance); Policy Builder is served only with a valid holder session. No private-key collection, payment execution, telemetry or AI inference. Not an agent platform. Not a full x402 verifier.
+**Quick Check** uses a read-only public RPC relay. **Advanced Verification** (document lab) needs no wallet. Optional **VoucherGuard Pro** is Cloudflare Worker–gated for $VG holders on Solana (signed challenge + on-chain balance); Policy Builder is served only with a valid holder session. No private-key collection, payment execution, telemetry or AI inference. Not an agent platform. Not a full x402 verifier.
 
 **Not independently audited.** Do not treat PASS reports, Pro unlock, or this software as a security certification for consequential payment authorization.
 
@@ -108,7 +108,7 @@ All example documents are simulations with a public test-only seed and explicit 
 
 ## VoucherGuard Pro (pre-launch)
 
-Optional holder toolkit for the future **$VG** token. Hosted unlock is enforced by the Cloudflare Pages Worker: wallet `signMessage` over a challenge, live SPL balance check against Pages secrets (`VG_TOKEN_MINT`, `VG_HOLDER_THRESHOLD`, `PRO_SESSION_SECRET`), then an HttpOnly session. **`/pro.html` and `/pro/*` are refused without that session.** The official mint is **unset by default**, so production shows **Token access coming soon**. Free Quick Check and Advanced Verification stay available without holder access.
+Optional holder toolkit for **$VG on Solana**. Official mint: `6haciZiuNuUvBvUnJa6SFB7bsxnpoW3Bz4R2cmpRpump` ([token page](https://pump.fun/coin/6haciZiuNuUvBvUnJa6SFB7bsxnpoW3Bz4R2cmpRpump)). Hosted unlock is enforced by the Cloudflare Pages Worker: wallet `signMessage` over a challenge, live SPL balance check against Pages secrets (`VG_TOKEN_MINT`, `VG_HOLDER_THRESHOLD`, `PRO_SESSION_SECRET`), then an HttpOnly session. **`/pro.html` and `/pro/*` are refused without that session.** Deployments without a mint remain locked with **Token access coming soon**. Free Quick Check and Advanced Verification stay available without holder access.
 
 Connect uses Wallet Standard. Pro asks for a one-time message signature to prove address control—no payment transaction. Holdings are re-checked when serving Pro tools. See [configuration and activation](docs/pro.md).
 
@@ -169,6 +169,6 @@ Initial Playwright browser installation downloads a test browser; this is a deve
 
 Contributions should include protocol evidence and tests for security behavior. Read [CONTRIBUTING.md](CONTRIBUTING.md). MIT license; no endorsements, adoption claims or audit certification.
 
-### Pons / Robinhood Wallet access
+### Optional Robinhood Wallet access
 
-Pro also supports a server-selected Robinhood Chain holder gate for the planned Pons launch. Robinhood Wallet connects using WalletConnect and signs only an authentication message; the Worker checks the official ERC-20 contract and holdings on chain 4663. No contract configured means no unlock. The Solana verifier remains free and unchanged. Setup and real-wallet validation are documented in [Pro configuration](docs/pro.md#robinhood-wallet-and-the-pons-launch).
+Pro also supports a server-selected Robinhood Chain holder gate for separately configured deployments. Production uses the official Solana mint above. Robinhood Wallet connects using WalletConnect and signs only an authentication message; the Worker checks the configured ERC-20 contract and holdings on chain 4663. No contract configured means no unlock. Setup and real-wallet validation are documented in [Pro configuration](docs/pro.md#optional-robinhood-chain-integration).

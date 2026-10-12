@@ -238,7 +238,9 @@ export async function handleProApi(
     if (!session)
       return reply(200, {
         status: "locked",
-        message: "Prove $VG holdings with a wallet signature to unlock Pro.",
+        network: "solana",
+        mint: env.VG_TOKEN_MINT?.trim(),
+        message: `Hold at least ${env.VG_HOLDER_THRESHOLD?.trim() || "1"} VG and prove holdings with a wallet signature to unlock Pro.`,
       });
     try {
       const holding = await verifyHolding(session.address, env, fetcher);
