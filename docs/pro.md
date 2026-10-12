@@ -18,9 +18,17 @@ Production selects `VG_ACCESS_CHAIN=solana` and the official `VG_TOKEN_MINT` as 
 
 No payment transaction is submitted. RPC failure cannot grant access. Pasting another wallet's address without a valid signature cannot unlock.
 
+## Start with a Solscan link
+
+After holder unlock, the default Pro flow is **paste a Solscan transaction link → Review transaction → download the review**. No JSON files or technical fields are required. Up to 20 links/signatures can be pasted (one per line); duplicates are checked once. RPC requests go only through the configured same-origin relay, not to pasted URLs, and each request has a 15-second timeout.
+
+Supported Payment Channels V1 settlement transactions produce historical on-chain outcome and voucher evidence. Ordinary swaps and token transfers are explicitly outside supported scope, not a safety PASS. Failed transactions remain failed even if their voucher signature is valid. Missing block time leaves historical expiry indeterminate.
+
+Custom policy checks are opt-in, use the fetched block time, and preserve missing signer/channel/state context as unresolved. Token and account pages are not transaction links. File tools and the policy builder are collapsed optional sections.
+
 ## Policy Builder
 
-Eligible holders open **Open Policy Builder** → `/pro.html` (Worker-protected). The Builder validates through `parsePolicyDocument`, same schema as CLI and Advanced. **Apply to Advanced** stashes the policy and returns to the main verifier without altering signed voucher fields.
+Eligible holders open **Open Pro workspace** → `/pro.html` (Worker-protected). The Builder validates through `parsePolicyDocument`, same schema as CLI and Advanced. **Apply to Advanced** stashes the policy and returns to the main verifier without altering signed voucher fields.
 
 The workspace includes:
 

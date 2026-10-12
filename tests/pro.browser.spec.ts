@@ -30,6 +30,9 @@ test("policy builder on the gated Pro page validates, copies, downloads and appl
   });
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("./pro.html");
+  await page
+    .getByText("Optional: custom rules & saved policies", { exact: true })
+    .click();
   await expect(page.getByTestId("policy-builder")).toBeVisible();
   await page.goto("./");
   const original = JSON.parse(
@@ -38,6 +41,9 @@ test("policy builder on the gated Pro page validates, copies, downloads and appl
       .inputValue(),
   );
   await page.goto("./pro.html");
+  await page
+    .getByText("Optional: custom rules & saved policies", { exact: true })
+    .click();
   const builder = page.getByTestId("policy-builder");
   await builder
     .getByText("Advanced constraints & JSON", { exact: true })
@@ -158,7 +164,7 @@ test("eligible homepage offers the protected Policy Builder link", async ({
     "Pro unlocked",
   );
   await expect(
-    page.locator("#pro").getByRole("link", { name: "Open Policy Builder" }),
+    page.locator("#pro").getByRole("link", { name: "Open Pro workspace" }),
   ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   expect(
@@ -213,7 +219,7 @@ test("a server-issued Robinhood holder session offers the protected tools route"
   await expect(
     page
       .locator("#pro")
-      .getByRole("link", { name: "Open Policy Builder", exact: true }),
+      .getByRole("link", { name: "Open Pro workspace", exact: true }),
   ).toHaveAttribute("href", "/pro.html");
   await expect(page.locator("#pro")).toContainText("Observed at block 123");
 });
@@ -228,6 +234,9 @@ test("holder workspace saves revisions, restores policies and verifies imported 
     toolsPath: "/pro.html",
   });
   await page.goto("./pro.html");
+  await page
+    .getByText("Optional: custom rules & saved policies", { exact: true })
+    .click();
   await page
     .getByLabel("Policy name", { exact: true })
     .fill("Agent production");
@@ -248,11 +257,17 @@ test("holder workspace saves revisions, restores policies and verifies imported 
   ).toContainText("revision 1");
   await page.reload();
   await page
+    .getByText("Optional: custom rules & saved policies", { exact: true })
+    .click();
+  await page
     .getByLabel("Saved policies", { exact: true })
     .selectOption({ label: "Agent production · v1" });
   await expect(
     page.getByLabel("Maximum cumulative amount", { exact: true }),
   ).toHaveValue("1500000");
+  await page
+    .getByText("Advanced: voucher files & simulations", { exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Load sample scenarios", exact: true })
     .click();
@@ -296,6 +311,76 @@ test("holder workspace saves revisions, restores policies and verifies imported 
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({
     path: "test-results/workspace-desktop.png",
+    fullPage: true,
+  });
+});
+
+test("Pro reviews a Solscan link without policy setup and exports fetched evidence", async ({
+  page,
+}) => {
+  await mockProStatus(page, {
+    status: "eligible",
+    message: "Verified",
+    address: address(9),
+    toolsPath: "/pro.html",
+  });
+  const signature =
+    "4wMpYs4wHJX8ArjcTBqZ9pTV1erxAJiqHbUsHkUq44kb8wELDZtRem3k2ZjYQW4kF99TPXe4HhR8hRHJ29DbAvTa";
+  const wire = await readFile("tests/fixtures/settle-tx.json", "utf8");
+  let requests = 0;
+  await page.route("**/api/solana-rpc", async (route) => {
+    requests++;
+    expect(route.request().postDataJSON().params[0]).toBe(signature);
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: wire,
+    });
+  });
+  await page.goto("./pro.html");
+  await page
+    .getByLabel("Solscan transaction link", { exact: true })
+    .fill(`https://solscan.io/tx/${signature}`);
+  await page
+    .getByRole("button", { name: "Review transaction", exact: true })
+    .click();
+  await expect(page.getByTestId("pro-transaction-result")).toContainText(
+    "Transaction evidence verified",
+  );
+  expect(requests).toBe(1);
+  await expect(page.getByTestId("pro-transaction-result")).not.toContainText(
+    "Custom policy:",
+  );
+  const exportPromise = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download review", exact: true })
+    .click();
+  const path = await (await exportPromise).path();
+  if (!path) throw Error("Missing review");
+  const exported = JSON.parse(await readFile(path, "utf8"));
+  expect(exported.results[0].review.result.signature).toBe(signature);
+  expect(
+    exported.results[0].review.result.voucherReport.evidence.messageHex,
+  ).toBeTruthy();
+  await page.getByLabel("Also check my custom policy", { exact: true }).check();
+  await page
+    .getByRole("button", { name: "Review transaction", exact: true })
+    .click();
+  await expect(page.getByTestId("pro-transaction-result")).toContainText(
+    "Custom policy: INDETERMINATE",
+  );
+  await expect(page.getByTestId("pro-transaction-result")).toContainText(
+    "No independent signer authentication",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({
+    path: "test-results/pro-solscan.png",
     fullPage: true,
   });
 });

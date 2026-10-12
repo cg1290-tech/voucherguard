@@ -234,8 +234,8 @@ function App() {
                 Policy Builder <span aria-hidden="true">↗</span>
               </strong>
               <p>
-                Build, export and apply verification policies after the Pages
-                Worker verifies on-chain $VG holdings.
+                Paste Solscan links, review transaction evidence and export
+                reports after verifying your $VG holdings.
               </p>
             </a>
             <p className="small muted">

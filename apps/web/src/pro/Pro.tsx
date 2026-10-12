@@ -212,7 +212,7 @@ export function Pro() {
                     )}
                     {eligible && (
                       <a className="button primary" href={toolsHref}>
-                        Open Policy Builder
+                        Open Pro workspace
                       </a>
                     )}
                     <button
@@ -244,7 +244,7 @@ export function Pro() {
                   {eligible && (
                     <div className="pro-wallet-actions">
                       <a className="button primary" href={toolsHref}>
-                        Open Policy Builder
+                        Open Pro workspace
                       </a>
                       <button
                         type="button"
@@ -299,8 +299,8 @@ export function Pro() {
             <p className="small-label">HOLDER TOOL / SERVER GATED</p>
             <h3>Policy Builder</h3>
             <p>
-              Save policy revisions, import voucher files, run batch checks and
-              export detailed evidence from your holder workspace.
+              Paste Solscan transaction links, review evidence and export
+              reports. Custom policies and file tools are optional.
             </p>
             <span className="pro-tool-label">
               Locked until the Worker verifies $VG holdings
