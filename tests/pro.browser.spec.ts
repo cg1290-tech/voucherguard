@@ -470,3 +470,76 @@ test("Pro automatically highlights transaction fees, inner approvals and failed 
   );
   await expect(insights).toBeVisible();
 });
+
+test("local Pro history, cards and comparisons do not make extra RPC requests", async ({
+  page,
+}) => {
+  await mockProStatus(page, {
+    status: "eligible",
+    message: "Verified",
+    address: address(9),
+  });
+  const fixture = await readFile("tests/fixtures/settle-tx.json", "utf8");
+  let requests = 0;
+  await page.route("**/api/solana-rpc", async (route) => {
+    requests++;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: fixture,
+    });
+  });
+  await page.goto("./pro.html");
+  await page
+    .getByLabel("Solscan transaction link")
+    .fill(
+      "https://solscan.io/tx/4wMpYs4wHJX8ArjcTBqZ9pTV1erxAJiqHbUsHkUq44kb8wELDZtRem3k2ZjYQW4kF99TPXe4HhR8hRHJ29DbAvTa",
+    );
+  await page
+    .getByRole("button", { name: "Review transaction", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Save current reviews" }),
+  ).toBeEnabled();
+  const baseline = requests;
+  await page.getByRole("button", { name: "Save current reviews" }).click();
+  await page.getByRole("button", { name: "Save current reviews" }).click();
+  await expect(page.locator(".pro-saved-report")).toHaveCount(2);
+  await page
+    .getByRole("checkbox", { name: "Compare", exact: true })
+    .nth(0)
+    .check();
+  await page
+    .getByRole("checkbox", { name: "Compare", exact: true })
+    .nth(1)
+    .check();
+  await expect(
+    page.getByRole("heading", { name: "Saved report comparison" }),
+  ).toBeVisible();
+  const cardPromise = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download current card", exact: true })
+    .click();
+  const card = await cardPromise;
+  const cardPath = await card.path();
+  if (!cardPath) throw Error("Missing card");
+  expect((await readFile(cardPath)).subarray(0, 8).toString("hex")).toBe(
+    "89504e470d0a1a0a",
+  );
+  await page.reload();
+  await expect(page.locator(".pro-saved-report")).toHaveCount(2);
+  await page
+    .getByRole("button", { name: "View saved summary" })
+    .first()
+    .click();
+  await expect(page.locator(".pro-saved-report").first()).toContainText(
+    "Historical snapshot",
+  );
+  expect(requests).toBe(baseline);
+  await page.screenshot({
+    path: "../VoucherGuard-Pro-local-reports.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Clear local history" }).click();
+  await expect(page.locator(".pro-saved-report")).toHaveCount(0);
+});
