@@ -333,3 +333,230 @@
   height: auto;
   margin: 16px 0;
 }
+
+/* Holder workspace */
+.pro-tools-page {
+  max-width: 1280px;
+  padding: 40px 28px 80px;
+}
+.pro-tools-header {
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 32px;
+}
+.pro-tools-header h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  letter-spacing: -1.5px;
+  margin: 10px 0 16px;
+}
+.pro-tools-header p {
+  color: #b8c3bb;
+}
+.pro-builder {
+  border-radius: 12px;
+  padding: 32px;
+}
+.pro-library {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr 1.2fr;
+  gap: 16px;
+  align-items: end;
+  border-block: 1px solid var(--line);
+  padding: 20px 0;
+  margin-top: 24px;
+}
+.pro-library label {
+  font-size: 12px;
+  color: #b8c3bb;
+  min-width: 0;
+}
+.pro-library input,
+.pro-library select {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+}
+.pro-library button,
+.workbench button {
+  background: #17231b;
+  border: 1px solid #455c48;
+  padding: 12px 16px;
+  color: #e4eae6;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.pro-library button:disabled,
+.workbench button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.file-control {
+  display: block;
+  font-size: 12px;
+}
+.file-control input {
+  display: block;
+  font-size: 11px;
+  padding: 12px;
+  border: 1px dashed #52654b;
+  background: #111b14;
+  color: #c4cec7;
+  border-radius: 6px;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+}
+.workbench {
+  margin-top: 40px;
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0f1512;
+}
+.workbench-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: start;
+}
+.workbench-heading h2 {
+  font-size: 30px;
+  letter-spacing: -0.8px;
+  margin: 10px 0;
+}
+.workbench-heading p {
+  color: #b8c3bb;
+}
+.workspace-badge {
+  white-space: nowrap;
+  font: 10px var(--mono);
+  color: var(--green);
+  border: 1px solid #52654b;
+  padding: 10px;
+  border-radius: 4px;
+}
+.workbench-import {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin: 24px 0 16px;
+}
+.workbench button.primary {
+  background: var(--green);
+  color: #101710;
+}
+.workbench-counts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 24px 0;
+}
+.workbench-counts button {
+  text-align: left;
+  padding: 20px;
+}
+.workbench-counts strong {
+  display: block;
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+.workbench-counts span {
+  font: 10px var(--mono);
+}
+.workbench-counts button[aria-pressed="true"] {
+  border-color: var(--green);
+}
+.workspace-empty {
+  padding: 32px;
+  border: 1px dashed #394c3d;
+  text-align: center;
+  color: #b8c3bb;
+}
+.workbench-results details {
+  border-block-end: 1px solid var(--line);
+  padding: 16px 0;
+}
+.workbench-results summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.workbench-results summary strong {
+  font: 11px var(--mono);
+}
+.result-PASS {
+  color: var(--green);
+}
+.result-FAIL,
+.result-INVALID {
+  color: #ff9a98;
+}
+.result-INDETERMINATE {
+  color: #f6d178;
+}
+.workbench-results li {
+  font-size: 12px;
+  margin-top: 20px;
+}
+.workbench-results li p {
+  color: #b8c3bb;
+}
+.workbench-history {
+  margin-top: 24px;
+  font-size: 12px;
+  color: #b8c3bb;
+}
+@media (max-width: 900px) {
+  .pro-library {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .pro-tools-page {
+    padding: 24px 14px;
+  }
+  .pro-tools-header,
+  .workbench-heading {
+    flex-direction: column;
+  }
+  .pro-builder,
+  .workbench {
+    padding: 20px 16px;
+  }
+  .pro-library {
+    grid-template-columns: 1fr;
+  }
+  .workbench-counts {
+    grid-template-columns: 1fr 1fr;
+  }
+  .workbench-import {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+.pro-tools-header {
+  height: auto;
+  padding-inline: 0;
+}
+.pro-library input:not([type="file"]) {
+  background: #0b100d;
+  color: #e2eae3;
+  border: 1px solid #334238;
+  padding: 12px;
+  border-radius: 4px;
+}
+.pro-advanced {
+  margin-block: 24px;
+  border: 1px solid var(--line);
+  padding: 18px;
+  border-radius: 6px;
+}
+.pro-advanced > summary {
+  cursor: pointer;
+  color: #c8d7cb;
+  font-size: 13px;
+}
