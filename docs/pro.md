@@ -22,7 +22,16 @@ No payment transaction is submitted. RPC failure cannot grant access. Pasting an
 
 Eligible holders open **Open Policy Builder** → `/pro.html` (Worker-protected). The Builder validates through `parsePolicyDocument`, same schema as CLI and Advanced. **Apply to Advanced** stashes the policy and returns to the main verifier without altering signed voucher fields.
 
-Batch Verification and Advanced Reports remain **not implemented**.
+The workspace includes:
+
+- Quick setup with exact conversion of payment-token amounts (0–18 decimals) and validity-window choices.
+- Policy or voucher JSON import. Imported policy context must still be independently confirmed.
+- Named, immutable policy revisions stored in this browser, scoped by the connected holder address. No cloud sync or encrypted vault is implied; download a backup.
+- Batch verification of 1–100 voucher documents, 1 MiB total, through the same core verifier. One JSON document per file or JSON arrays are accepted.
+- Seven clearly labeled simulated scenarios; per-voucher evidence and status filters; JSON reports containing the exact policy used, evidence and limitations.
+- Recent-run history for this visit only (last ten runs). Download reports to retain them.
+
+Batch results are independent checks. They do not authenticate imported signer/channel/state assertions, advance watermarks between vouchers, or guarantee settlement or protection from concurrent replay. Production access requires at least **5,000,000 VG**; that holder threshold is separate from payment-token limits.
 
 ## Activation (Cloudflare Pages secrets)
 

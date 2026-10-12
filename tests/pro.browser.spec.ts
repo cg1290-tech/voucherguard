@@ -40,6 +40,9 @@ test("policy builder on the gated Pro page validates, copies, downloads and appl
   await page.goto("./pro.html");
   const builder = page.getByTestId("policy-builder");
   await builder
+    .getByText("Advanced constraints & JSON", { exact: true })
+    .click();
+  await builder
     .getByLabel("Maximum cumulative amount", { exact: true })
     .fill("499");
   await builder
@@ -213,4 +216,86 @@ test("a server-issued Robinhood holder session offers the protected tools route"
       .getByRole("link", { name: "Open Policy Builder", exact: true }),
   ).toHaveAttribute("href", "/pro.html");
   await expect(page.locator("#pro")).toContainText("Observed at block 123");
+});
+
+test("holder workspace saves revisions, restores policies and verifies imported batches", async ({
+  page,
+}) => {
+  await mockProStatus(page, {
+    status: "eligible",
+    message: "Verified",
+    address: address(9),
+    toolsPath: "/pro.html",
+  });
+  await page.goto("./pro.html");
+  await page
+    .getByLabel("Policy name", { exact: true })
+    .fill("Agent production");
+  await page
+    .getByLabel("Spending limit in tokens", { exact: true })
+    .fill("1.5");
+  await page
+    .getByRole("button", { name: "Set spending limit", exact: true })
+    .click();
+  await expect(
+    page.getByLabel("Maximum cumulative amount", { exact: true }),
+  ).toHaveValue("1500000");
+  await page
+    .getByRole("button", { name: "Save revision", exact: true })
+    .click();
+  await expect(
+    page.getByTestId("policy-builder").getByRole("status"),
+  ).toContainText("revision 1");
+  await page.reload();
+  await page
+    .getByLabel("Saved policies", { exact: true })
+    .selectOption({ label: "Agent production · v1" });
+  await expect(
+    page.getByLabel("Maximum cumulative amount", { exact: true }),
+  ).toHaveValue("1500000");
+  await page
+    .getByRole("button", { name: "Load sample scenarios", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Verify 7 vouchers", exact: true })
+    .click();
+  await expect(page.locator(".workbench-results > details")).toHaveCount(7);
+  const report = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download batch report", exact: true })
+    .click();
+  const path = await (await report).path();
+  if (!path) throw Error("Missing report");
+  const exported = JSON.parse(await readFile(path, "utf8"));
+  expect(exported.results).toHaveLength(7);
+  expect(exported.policy.maxCumulativeAmount).toBe("1500000");
+  await page
+    .getByLabel("Import policy or voucher", { exact: true })
+    .setInputFiles("examples/valid.json");
+  await expect(
+    page.getByLabel("Expected channel identifier", { exact: true }),
+  ).not.toHaveValue("");
+  await page
+    .getByLabel("Import voucher files", { exact: true })
+    .setInputFiles("examples/valid.json");
+  await page
+    .getByRole("button", { name: "Verify 1 vouchers", exact: true })
+    .click();
+  await expect(page.locator(".workbench-results > details")).toHaveCount(1);
+  await expect(page.locator(".workbench-results")).toContainText("PASS");
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: "test-results/workspace-mobile.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({
+    path: "test-results/workspace-desktop.png",
+    fullPage: true,
+  });
 });
