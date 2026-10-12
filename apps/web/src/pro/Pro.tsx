@@ -169,9 +169,9 @@ export function Pro() {
             <>
               <h3>Holder verification</h3>
               <p className="small muted">
-                Connect a wallet, then sign a one-time Pro challenge. The Worker
-                checks your $VG balance on Solana before issuing an HttpOnly
-                session. No transaction is submitted.
+                Connect a wallet, then sign a short-lived Pro challenge. The
+                Worker checks your $VG balance on Solana before issuing an
+                HttpOnly session. No transaction is submitted.
               </p>
               {wallet.account ? (
                 <>

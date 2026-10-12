@@ -1,6 +1,8 @@
 # VoucherGuard Pro
 
-Pro is an optional **server-gated** holder toolkit for the future **$VG** token on the configured network: **Robinhood Chain mainnet (4663)** for the Pons launch, or the existing Solana mainnet-beta integration. Free Quick Check, Advanced Verification, core SDK and CLI stay available without a wallet. Hosted Pro unlock and `/pro.html` Policy Builder require a Cloudflare Pages Worker session after on-chain holdings are verified.
+Pro is an optional **server-gated** holder toolkit for **$VG on Solana mainnet-beta**. The official mint is `6haciZiuNuUvBvUnJa6SFB7bsxnpoW3Bz4R2cmpRpump`, a Token-2022 mint with 6 decimals. [Official token page](https://pump.fun/coin/6haciZiuNuUvBvUnJa6SFB7bsxnpoW3Bz4R2cmpRpump). Free Quick Check, Advanced Verification, core SDK and CLI stay available without a wallet. Hosted Pro unlock and `/pro.html` Policy Builder require a Cloudflare Pages Worker session after on-chain holdings are verified.
+
+Production selects `VG_ACCESS_CHAIN=solana` and the official `VG_TOKEN_MINT` as Pages secrets. Robinhood Chain support remains available for a separately configured deployment; it does not grant access for this Solana token.
 
 ## Pre-launch behavior
 
@@ -44,7 +46,7 @@ Redeploy `apps/web/dist` (including `_worker.js` and `_routes.json`) after setti
 - Open-source repo: anyone can rebuild Policy Builder offline; that is outside the hosted gate.
 - Do not use Pro as authentication for secrets, funds or privileged APIs beyond the hosted tool surface.
 
-## Robinhood Wallet and the Pons launch
+## Optional Robinhood Chain integration
 
 Set `VG_ACCESS_CHAIN=robinhood` as a Pages secret to select the Robinhood gate. It requires `VG_TOKEN_CONTRACT` (the official Pons ERC-20 contract), `VG_HOLDER_THRESHOLD`, and `PRO_SESSION_SECRET`. Leave the contract unset before launch: hosted tools remain locked. `VG_TOKEN_MINT` is the legacy Solana mint and does not activate the Robinhood gate.
 
