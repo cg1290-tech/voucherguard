@@ -187,7 +187,7 @@ export function RobinhoodWallet({
         )}
         {eligible && (
           <a className="button primary" href={session.toolsPath || "/pro.html"}>
-            Open Policy Builder
+            Open Pro workspace
           </a>
         )}
         {address && (
