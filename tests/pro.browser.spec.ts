@@ -384,3 +384,89 @@ test("Pro reviews a Solscan link without policy setup and exports fetched eviden
     fullPage: true,
   });
 });
+
+test("Pro automatically highlights transaction fees, inner approvals and failed attempts from one link", async ({
+  page,
+}) => {
+  await mockProStatus(page, {
+    status: "eligible",
+    message: "Verified",
+    address: address(9),
+    toolsPath: "/pro.html",
+  });
+  const signature =
+    "4wMpYs4wHJX8ArjcTBqZ9pTV1erxAJiqHbUsHkUq44kb8wELDZtRem3k2ZjYQW4kF99TPXe4HhR8hRHJ29DbAvTa";
+  const wire = JSON.parse(
+    await readFile("tests/fixtures/settle-tx.json", "utf8"),
+  );
+  const { base58 } = await import("@scure/base");
+  const data = new Uint8Array(9);
+  data[0] = 4;
+  new DataView(data.buffer).setBigUint64(1, 1000000n, true);
+  wire.result.transaction.message.accountKeys.push(
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  );
+  wire.result.meta.preBalances.push(1);
+  wire.result.meta.postBalances.push(1);
+  wire.result.meta.innerInstructions = [
+    {
+      index: 1,
+      instructions: [
+        { programIdIndex: 5, accounts: [1, 0, 0], data: base58.encode(data) },
+      ],
+    },
+  ];
+  // A synthetic permission instruction exercises the UI; this is not live-chain evidence.
+  await page.route("**/api/solana-rpc", async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(wire),
+    }),
+  );
+  await page.goto("./pro.html");
+  await page
+    .getByLabel("Solscan transaction link", { exact: true })
+    .fill(`https://solscan.io/tx/${signature}`);
+  await page
+    .getByRole("button", { name: "Review transaction", exact: true })
+    .click();
+  const insights = page.getByTestId("pro-insights");
+  await expect(insights).toContainText("0.00001 SOL");
+  await expect(insights).toContainText("-0.00001 SOL");
+  await expect(insights).toContainText("Spending delegation");
+  await expect(insights).toContainText("1000000 base units");
+  await expect(insights).toContainText("Inner 1.1");
+  const downloadPromise = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download review", exact: true })
+    .click();
+  const path = await (await downloadPromise).path();
+  if (!path) throw Error("Missing report");
+  const report = JSON.parse(await readFile(path, "utf8"));
+  expect(report.results[0].review.insights.permissionEvents[0].action).toBe(
+    "Spending delegation",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({
+    path: "test-results/pro-extra-checks.png",
+    fullPage: true,
+  });
+  wire.result.meta.err = { InstructionError: [1, "test"] };
+  wire.result.transaction.message.instructions = [];
+  await page
+    .getByRole("button", { name: "Review transaction", exact: true })
+    .click();
+  await expect(insights).toContainText("attempted; transaction failed");
+  await expect(insights).toContainText("not applied");
+  await expect(page.getByTestId("pro-transaction-result")).toContainText(
+    "Outside supported scope",
+  );
+  await expect(insights).toBeVisible();
+});
