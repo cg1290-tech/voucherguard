@@ -112,7 +112,7 @@ Optional holder toolkit for **$VG on Solana**. Official mint: `6haciZiuNuUvBvUnJ
 
 Connect uses Wallet Standard. Pro asks for a one-time message signature to prove address control—no payment transaction. Holdings are re-checked when serving Pro tools. See [configuration and activation](docs/pro.md).
 
-The **Policy Builder** (amount/increase caps, expiry windows, trusted-state requirement, expected channel) uses the core policy schema and can apply a policy to Advanced Verification without altering signed bytes. Standard/Conservative presets are editable examples, not security guarantees. Batch Verification and Advanced Reports are not implemented.
+The **Policy Builder** (amount/increase caps, expiry windows, trusted-state requirement, expected channel) uses the core policy schema and can apply a policy to Advanced Verification without altering signed bytes. Standard/Conservative presets are editable examples, not security guarantees. The Pro workspace adds exact token-unit quick setup, policy/voucher file import, browser-local saved revisions, batch verification (up to 100 vouchers / 1 MiB), simulated scenario testing, status filters and evidence report export. Batch checks remain conditional on supplied trust context and do not enforce sequential watermarks.
 
 Do **not** put the holder mint in public `VITE_*` build vars for access control. Worker Pages secrets are authoritative. Open-source forks can rebuild Policy Builder offline; that is outside the hosted gate. Pro is not authentication for secrets, funds or privileged APIs beyond the hosted tool surface.
 
