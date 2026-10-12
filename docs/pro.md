@@ -97,3 +97,9 @@ The free Solana Quick Check and Advanced verifier remain independent of the netw
 4. Verify protected `/pro.html` and `/pro/app.js`, not merely the homepage button. Mock tests do not replace this real-wallet check.
 
 References: [Pons network and token integration](https://docs.ponsfamily.com/), [Robinhood Chain network configuration](https://docs.robinhood.com/chain/add-network-to-wallet/), [Robinhood Wallet connection guide](https://robinhood.com/us/en/support/articles/connect-to-dapps/).
+
+## Local report tools
+
+Pro can save up to 20 historical transaction reviews per wallet on the current browser, compare two saved reports, and generate downloadable PNG evidence cards. Saved JSON retains the full original review and any custom policy. These operations do not fetch blockchain data, upload reports or use an AI service. The original transaction lookup and holder access checks still use RPC.
+
+History uses unencrypted localStorage, is editable local data rather than authenticated evidence, and does not sync between devices. Clearing browser data deletes history; saving more than 20 reviews replaces the oldest. Storage errors do not erase the existing history. Cards include historical scope and coverage counts and must not be treated as current permission checks or safety certificates. Comparisons show differences between recorded reports, potentially for different transactions or policies; they do not imply a live change in wallet permissions.

@@ -1,6 +1,7 @@
 import type { PolicyDocument } from "@voucherguard/core";
 import { serializeReport } from "@voucherguard/core";
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { LocalReports } from "./LocalReports";
 import { proApiBase } from "./pro-session";
 import { TransactionInsights } from "./TransactionInsights";
 import {
@@ -13,7 +14,9 @@ type Row = { signature: string; review?: Review; error?: string };
 const RPC = `${proApiBase()}/api/solana-rpc`;
 export function TransactionReview({
   policy,
+  owner,
 }: {
+  owner: string;
   policy: PolicyDocument | undefined;
 }) {
   const [input, setInput] = useState("");
@@ -272,6 +275,11 @@ export function TransactionReview({
           );
         })}
       </div>
+      <LocalReports
+        key={owner}
+        owner={owner}
+        reviews={rows.flatMap((row) => (row.review ? [row.review] : []))}
+      />
     </section>
   );
 }
