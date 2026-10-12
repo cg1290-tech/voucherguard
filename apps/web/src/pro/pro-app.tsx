@@ -54,7 +54,7 @@ function ProTools() {
         </div>
         <a href="/#pro">Back to unlock</a>
       </header>
-      <TransactionReview policy={policy} />
+      <TransactionReview policy={policy} owner={session.address || "local"} />
       <details className="pro-file-tools">
         <summary>Optional: custom rules & saved policies</summary>
         <PolicyBuilder
