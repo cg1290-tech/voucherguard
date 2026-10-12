@@ -26,6 +26,20 @@ Supported Payment Channels V1 settlement transactions produce historical on-chai
 
 Custom policy checks are opt-in, use the fetched block time, and preserve missing signer/channel/state context as unresolved. Token and account pages are not transaction links. File tools and the policy builder are collapsed optional sections.
 
+## Additional automatic Pro checks
+
+One transaction link also produces a historical effects report, even when no supported Payment Channels voucher is found:
+
+- Total network fee, fee payer and net SOL balance changes, using only exact safe JSON integers.
+- Exact raw token balance changes with RPC-provided decimals and mint/account identities; missing records remain unknown unless a new/closed account is supported by a zero SOL snapshot.
+- Selected SPL Token / Token-2022 operations: Approve, ApproveChecked, SetAuthority, CloseAccount, Burn/BurnChecked, FreezeAccount and Revoke. Top-level and recorded inner instructions are inspected; versioned lookup addresses resolve writable then readonly.
+- Failed transactions mark instruction effects as attempted, not applied. Net balances and fees come from the recorded execution metadata.
+- Referenced program inventory, coverage gaps, undecoded token instructions/extensions and missing inner traces are explicit. There is no program reputation, token legitimacy or current-permission certification.
+
+No additional form or RPC lookup is required. Net balance changes include rent, fees and transfers; they are not a transfer graph or personal P&L. No absence-of-risk verdict is derived from an empty permission list. The exported review includes these facts and coverage limits.
+
+References: [Solana RPC JSON structures](https://solana.com/docs/rpc/json-structures), [SPL Token instruction layout](https://github.com/solana-program/token/blob/main/interface/src/instruction.rs).
+
 ## Policy Builder
 
 Eligible holders open **Open Pro workspace** → `/pro.html` (Worker-protected). The Builder validates through `parsePolicyDocument`, same schema as CLI and Advanced. **Apply to Advanced** stashes the policy and returns to the main verifier without altering signed voucher fields.

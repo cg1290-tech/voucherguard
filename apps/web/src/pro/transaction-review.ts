@@ -12,7 +12,13 @@ import {
   type QuickExtractResult,
 } from "../quick/extract";
 
+import {
+  inspectTransaction,
+  type TransactionInsights,
+} from "./transaction-insights";
+
 export interface TransactionReview {
+  insights: TransactionInsights;
   signature: string;
   result: QuickExtractResult;
   policy?: PolicyDocument;
@@ -59,7 +65,11 @@ export async function reviewTransaction(
     result.notice +=
       " Block time unavailable: historical expiry is not established.";
   }
-  const review: TransactionReview = { signature, result };
+  const review: TransactionReview = {
+    signature,
+    result,
+    insights: inspectTransaction(tx),
+  };
   if (!policy || result.kind !== "historical") return review;
   review.policy = structuredClone(policy);
   if (result.blockTime === null) {
