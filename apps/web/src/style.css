@@ -936,3 +936,42 @@ footer .brand {
     font-size: 11px;
   }
 }
+
+.official-token {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #344337;
+  min-width: 0;
+}
+.official-token-address {
+  display: block;
+  padding: 0.8rem;
+  background: #090d0c;
+  border: 1px solid #52654b;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  user-select: all;
+  color: #e9eee9;
+}
+.official-token-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.8rem;
+  font-size: 0.85rem;
+}
+.official-token-actions button {
+  padding: 0.5rem 0.8rem;
+  background: #142017;
+  color: #b5f878;
+  border: 1px solid #52654b;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.official-token-actions a {
+  color: #b5f878;
+}
