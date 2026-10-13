@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.3.0] - 2026-10-13
+
+### Added
+
+- Free Transaction X-Ray: paste a Solscan link and press Play, switch Money/Permissions lenses, pause, scrub and inspect exact instruction evidence.
+- Selected SOL and SPL Token/Token-2022 transfer relationships with exact u64 amounts, explicit unknown steps, recorded inner-instruction ordering and failed-execution attempt labels.
+- Pro preferences saved per wallet in this browser: exact network-fee caps, selected spending-delegation and authority-change alerts, and referenced-program allowlists populated from existing reviews.
+- Pro X-Ray overlays of captured personal rules; complete X-Ray evidence retained in JSON exports and saved reports.
+- Updated product documentation and ready-to-use announcement text.
+
+### Validation and scope
+
+- Typecheck, lint, build, 257 unit tests and 16 browser tests pass. Existing offline verification and holder-access regressions remain covered.
+- One existing transaction lookup feeds verification and X-Ray. Playback, evidence inspection, rule evaluation and saving add no RPC calls, uploads or AI services.
+- X-Ray displays recorded instruction amounts and separate final net balances. It does not simulate intermediate balances, audit arbitrary programs or check current permissions. Playback is capped at 200 steps; missing/unsupported data remains explicit.
+- Pro access remains backend-gated for 5M VG on Solana with a wallet authentication message. Free X-Ray requires no wallet.
+- This remains a pre-release without an independent audit. npm packages are not published.
+
 ## [0.2.0] - 2026-10-12
 
 ### Added
@@ -31,5 +49,6 @@
 - Initial open-source preview: offline Solana Foundation payment-channel V1 voucher verification with a TypeScript core, CLI and browser playground.
 - Canonical decoding, Ed25519 signatures, BigInt policies, trusted-state checks and seven simulation fixtures.
 
+[0.3.0]: https://github.com/cg1290-tech/voucherguard/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/cg1290-tech/voucherguard/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/cg1290-tech/voucherguard/releases/tag/v0.1.0

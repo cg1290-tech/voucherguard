@@ -1,10 +1,10 @@
 # VoucherGuard
 
-**Verify what your AI agents sign.**
+**Paste a Solscan link. Press Play. Look inside the transaction.**
 
-[Live site](https://voucherguard.pages.dev/) · [Source repository](https://github.com/cg1290-tech/voucherguard)
+[Try Free X-Ray](https://voucherguard.pages.dev/#quick-check) · [Explore Pro](https://voucherguard.pages.dev/#pro) · [Release 0.3.0](https://github.com/cg1290-tech/voucherguard/releases/tag/v0.3.0) · [Source repository](https://github.com/cg1290-tech/voucherguard)
 
-An open-source verification toolkit for **Solana Foundation payment channel V1 vouchers**. Quick Check reads confirmed settlement transactions; Advanced Verification inspects imported signed documents offline; both reuse the same Ed25519/policy engine.
+VoucherGuard combines a **Free Transaction X-Ray** for selected recorded Solana transaction effects, **Pro personal rule alerts** for $VG holders, and an offline verifier for **Solana Foundation payment channel V1 vouchers**. X-Ray remains useful when no supported voucher is present; unsupported program operations stay visibly undecoded.
 
 AI agents can authorize spending. A valid signature alone does not establish that the authorization matches your channel, budget, clock or settlement watermark. VoucherGuard makes those checks explicit and reviewable.
 
@@ -12,7 +12,20 @@ AI agents can authorize spending. A valid signature alone does not establish tha
 
 **Not independently audited.** Do not treat PASS reports, Pro unlock, or this software as a security certification for consequential payment authorization.
 
-![Site preview](docs/preview-desktop.png)
+## Free and Pro at a glance
+
+| Capability | Free | Pro |
+| --- | --- | --- |
+| One-link X-Ray with Money/Permissions lenses | Yes, no wallet required | Yes |
+| Pause, scrub and inspect recorded instruction evidence | Yes | Yes |
+| Personal fee, delegation, authority and program-list rules | — | Saved per wallet in this browser |
+| Rule highlights on relevant X-Ray steps | — | Yes |
+| Saved reports, comparisons and downloadable evidence cards | — | Yes, local browser storage |
+| Custom voucher policies and voucher-file batches | Advanced manual verification | Policy Builder and up to 100 voucher files |
+
+Both views use the same existing transaction lookup. Playback and personal rule checks add no RPC calls. Link lookups and hosted holder checks still require read-only RPC; the offline signed-document verifier does not.
+
+[Announcement text and product facts](docs/releases/v0.3.0/ANNOUNCEMENT.md) · [Changelog](CHANGELOG.md)
 
 ## Scope and protocol
 
@@ -108,11 +121,13 @@ All example documents are simulations with a public test-only seed and explicit 
 
 **Advanced Verification** is the document lab: paste a voucher JSON, supply the independently expected signer and channel, edit amount/increase caps and expiry/state policies, then verify offline. Seven shared fixtures demonstrate common failure modes. Export JSON or a readable text report.
 
-## VoucherGuard Pro (pre-launch)
+## VoucherGuard Pro — holder workspace
 
-Optional holder toolkit for **$VG on Solana**. Official mint: `6haciZiuNuUvBvUnJa6SFB7bsxnpoW3Bz4R2cmpRpump` ([token page](https://pump.fun/coin/6haciZiuNuUvBvUnJa6SFB7bsxnpoW3Bz4R2cmpRpump)). Hosted unlock is enforced by the Cloudflare Pages Worker: wallet `signMessage` over a challenge, live SPL balance check against Pages secrets (`VG_TOKEN_MINT`, `VG_HOLDER_THRESHOLD`, `PRO_SESSION_SECRET`), then an HttpOnly session. **`/pro.html` and `/pro/*` are refused without that session.** Deployments without a mint remain locked with **Token access coming soon**. Free Quick Check and Advanced Verification stay available without holder access.
+Hold **5,000,000 VG on Solana** and sign an authentication message to unlock the hosted Pro workspace. Official mint: `6haciZiuNuUvBvUnJa6SFB7bsxnpoW3Bz4R2cmpRpump` ([token page](https://pump.fun/coin/6haciZiuNuUvBvUnJa6SFB7bsxnpoW3Bz4R2cmpRpump)). Hosted unlock is enforced by the Cloudflare Pages Worker: wallet `signMessage` over a challenge, live SPL balance check against Pages secrets (`VG_TOKEN_MINT`, `VG_HOLDER_THRESHOLD`, `PRO_SESSION_SECRET`), then an HttpOnly session. **`/pro.html` and `/pro/*` are refused without that session.** Deployments without a mint remain locked with **Token access coming soon**. Free Quick Check and Advanced Verification stay available without holder access.
 
 Connect uses Wallet Standard. Pro asks for a one-time message signature to prove address control—no payment transaction. Holdings are re-checked when serving Pro tools. See [configuration and activation](docs/pro.md).
+
+Set transaction preferences once, then paste a link: fee caps, selected permission alerts and allowed-program lists are checked against existing metadata. X-Ray highlights matching alerts; incomplete checks remain incomplete. Captured preferences stay attached to exported and saved reports even after settings change.
 
 The **Policy Builder** (amount/increase caps, expiry windows, trusted-state requirement, expected channel) uses the core policy schema and can apply a policy to Advanced Verification without altering signed bytes. Standard/Conservative presets are editable examples, not security guarantees. The Pro link review automatically inspects recorded fees, SOL/token balance changes, selected token authorizations (including inner instructions), failed effects and decoding coverage. It does not certify current permissions or safety. The Pro workspace also adds exact token-unit quick setup, policy/voucher file import, browser-local saved revisions, batch verification (up to 100 vouchers / 1 MiB), simulated scenario testing, status filters and evidence report export. Batch checks remain conditional on supplied trust context and do not enforce sequential watermarks.
 
