@@ -106,9 +106,7 @@ export function TransactionXRay({
         or selected account permissions.
       </p>
       <div className="xray-focus">
-        <label htmlFor={focusId}>
-          My wallet / account
-        </label>
+        <label htmlFor={focusId}>My wallet / account</label>
         <select
           id={focusId}
           value={focus}
