@@ -1,0 +1,219 @@
+.xray {
+  margin: 1.5rem 0;
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid #52654b;
+  border-radius: 16px;
+  background: #0c1510;
+  color: #e9eee9;
+  overflow-wrap: anywhere;
+}
+.xray-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.xray h3 {
+  font-size: clamp(1.5rem, 3vw, 2.4rem);
+  margin: 0.5rem 0;
+}
+.xray-outcome,
+.xray-position {
+  font-family: monospace;
+  color: #b9c7bd;
+}
+.xray-controls {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 1.5rem 0;
+}
+.xray-controls button[aria-pressed="true"] {
+  background: #b5f878;
+  color: #090d0c;
+}
+.xray-stage {
+  padding: 1.5rem;
+  border: 1px solid #344337;
+  border-radius: 12px;
+  background: #142017;
+}
+.xray-stage h4 {
+  font-size: 1.5rem;
+  margin: 1rem 0;
+}
+.xray .xray-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  cursor: pointer;
+}
+.xray-node {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-width: 0;
+  text-align: left;
+}
+.xray-node small {
+  color: #b9c7bd;
+}
+.xray-node strong {
+  font-family: monospace;
+  font-size: clamp(0.8rem, 2vw, 1.15rem);
+}
+.xray-diagram svg {
+  width: 30%;
+  min-width: 60px;
+  overflow: visible;
+}
+.xray-diagram path {
+  stroke: #b5f878;
+  stroke-width: 3;
+  fill: none;
+}
+.xray-attempt {
+  stroke-dasharray: 5 8;
+}
+.xray-running .xray-edge {
+  stroke-dasharray: 12 9;
+  animation: xray-flow 1s linear infinite;
+}
+.xray-flagged,
+.xray-alert {
+  border-color: #f6d178;
+}
+.xray-flagged .xray-position,
+.xray-alert {
+  color: #f6d178;
+}
+.xray-amount {
+  font-size: 1.8rem;
+  color: #b5f878;
+}
+.xray-amount span {
+  display: block;
+  font-size: 0.85rem;
+  color: #b9c7bd;
+}
+.xray-evidence {
+  border-top: 1px solid #52654b;
+  padding-top: 1rem;
+}
+.xray-scrub {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 1rem 0;
+}
+.xray-scrub input {
+  flex: 1;
+  min-width: 0;
+}
+.xray-steps {
+  display: flex;
+  gap: 0.5rem;
+  overflow: auto;
+  max-height: 180px;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.xray-selected {
+  outline: 2px solid #b5f878;
+}
+.xray-rule-note {
+  padding: 1rem;
+  border: 1px solid #52654b;
+  border-radius: 8px;
+}
+.xray a {
+  color: #b5f878;
+}
+@keyframes xray-flow {
+  to {
+    stroke-dashoffset: -42;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xray-running .xray-edge {
+    animation: none;
+  }
+}
+@media (max-width: 600px) {
+  .xray .xray-diagram {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  .xray-stage {
+    padding: 0.75rem;
+  }
+}
+
+.xray-diagram:has(.xray-unknown) path {
+  stroke: #a0aca7;
+}
+.xray-steps button[data-kind="unknown"] {
+  color: #a0aca7;
+}
+.xray-steps button[data-kind="permission"] {
+  border-color: #f6d178;
+}
+.xray button {
+  background: #16211a;
+  color: #e9eee9;
+  border: 1px solid #52654b;
+  border-radius: 9px;
+  padding: 0.6rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.xray button:hover {
+  background: #243626;
+  border-color: #b5f878;
+}
+.xray button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.xray button:focus-visible {
+  outline: 2px solid #b5f878;
+  outline-offset: 3px;
+}
+.xray .xray-node {
+  padding: 1rem;
+  background: #0c1510;
+  border: 1px solid #52654b;
+  border-radius: 12px;
+}
+.xray-stage.xray-permission-flow .xray-diagram path {
+  stroke: #f6d178;
+}
+.xray-stage.xray-permission-flow .xray-node {
+  border-color: #9a8450;
+}
+.xray-raw {
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+@media (max-width: 600px) {
+  .xray .xray-node {
+    padding: 0.5rem;
+  }
+  .xray button {
+    padding: 0.55rem 0.7rem;
+  }
+}
+.xray button.xray-alert {
+  color: #f6d178;
+  border-color: #f6d178;
+}

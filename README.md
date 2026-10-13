@@ -102,6 +102,8 @@ All example documents are simulations with a public test-only seed and explicit 
 
 ## Quick Check and Advanced Verification
 
+**Transaction X-Ray (Free)** plays selected decoded transfers and account operations from one transaction lookup. Paste a Solscan link and press Play; switch Money/Permissions lenses, pause or scrub, and inspect exact instruction evidence. Unknown operations remain explicitly undecoded, and failed transactions show attempts. Pro overlays captured personal rule alerts without another RPC call. This is historical inspection, not a simulator or live permission check.
+
 **Quick Check** accepts a Solscan URL or Solana signature, fetches the confirmed transaction through the read-only Pages relay, extracts a Payment Channels V1 settlement voucher when present, and runs historical Ed25519 verification in the browser. It does not certify current spendability.
 
 **Advanced Verification** is the document lab: paste a voucher JSON, supply the independently expected signer and channel, edit amount/increase caps and expiry/state policies, then verify offline. Seven shared fixtures demonstrate common failure modes. Export JSON or a readable text report.

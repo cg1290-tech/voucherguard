@@ -1,9 +1,7 @@
-import { type FormEvent, useState } from "react";
-import {
-  type HistoricalTxReport,
-  type QuickExtractResult,
-  quickCheckTransaction,
-} from "./extract";
+import { type FormEvent, useEffect, useRef, useState } from "react";
+import { loadXRay, type XRayModel } from "../xray/model";
+import { TransactionXRay } from "../xray/TransactionXRay";
+import type { HistoricalTxReport, QuickExtractResult } from "./extract";
 
 const DEFAULT_RPC =
   import.meta.env.VITE_VG_RPC_URL?.trim() ||
@@ -88,14 +86,32 @@ export function QuickCheck() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<QuickExtractResult>();
+  const [xray, setXray] = useState<XRayModel>();
+  const abort = useRef<AbortController | undefined>(undefined);
+  useEffect(() => () => abort.current?.abort(), []);
   async function run(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
     setResult(undefined);
+    setXray(undefined);
+    const controller = new AbortController();
+    abort.current = controller;
     try {
-      setResult(await quickCheckTransaction(input, DEFAULT_RPC));
+      const review = await loadXRay(input, DEFAULT_RPC, (url, init) =>
+        fetch(url, {
+          ...init,
+          signal: AbortSignal.any([
+            controller.signal,
+            AbortSignal.timeout(15000),
+          ]),
+        }),
+      );
+      if (!controller.signal.aborted) {
+        setResult(review.result);
+        setXray(review.xray);
+      }
     } finally {
-      setBusy(false);
+      if (!controller.signal.aborted) setBusy(false);
     }
   }
   return (
@@ -107,10 +123,14 @@ export function QuickCheck() {
       <div className="section-heading">
         <div>
           <p className="eyebrow">QUICK CHECK / FREE</p>
-          <h2 id="quick-title">Paste. Inspect. Verify.</h2>
+          <h2 id="quick-title">Paste a link. Press Play.</h2>
         </div>
         <span className="simulation">MAINNET READ-ONLY RPC</span>
       </div>
+      <p className="quick-intro">
+        Transaction X-Ray plays decoded transfers and selected permissions from
+        the same transaction lookup. Unsupported instructions remain visible.
+      </p>
       <p className="quick-intro">
         Paste a Solscan transaction URL or Solana signature. VoucherGuard reads
         the confirmed transaction, extracts a Payment Channels V1 settlement
@@ -128,6 +148,7 @@ export function QuickCheck() {
           autoComplete="off"
           spellCheck={false}
           placeholder="Paste a Solscan transaction URL or Solana signature…"
+          disabled={busy}
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
@@ -136,13 +157,16 @@ export function QuickCheck() {
           type="submit"
           disabled={busy || !input.trim()}
         >
-          {busy ? "Verifying…" : "Verify transaction"}
+          {busy ? "Loading…" : "Play transaction"}
         </button>
       </form>
       <p className="small muted">
         Or <a href="#playground">upload / edit a signed voucher</a> in Advanced
         Verification.
       </p>
+      {xray && (
+        <TransactionXRay key={result?.signature} model={xray} autoPlay />
+      )}
       {result?.kind === "historical" && <HistoricalView result={result} />}
       {result?.kind === "unsupported" && (
         <p

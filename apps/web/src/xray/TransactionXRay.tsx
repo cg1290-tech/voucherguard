@@ -1,0 +1,332 @@
+import { useEffect, useState } from "react";
+import { displayUnits } from "../pro/transaction-insights";
+import type { RuleReport } from "../pro/transaction-rules";
+import type { XRayModel, XRayStep } from "./model";
+import "./xray.css";
+
+const short = (s: string) =>
+  s.length > 16 ? `${s.slice(0, 7)}…${s.slice(-5)}` : s;
+function flagged(step: XRayStep, report?: RuleReport): boolean {
+  if (!report) return false;
+  return (
+    (report.rules.restrictPrograms &&
+      !!step.program &&
+      !report.rules.allowedPrograms.includes(step.program)) ||
+    (report.rules.flagDelegations &&
+      step.permissionAction === "Spending delegation") ||
+    (report.rules.flagAuthorityChanges &&
+      step.permissionAction === "Authority change")
+  );
+}
+export function TransactionXRay({
+  model,
+  rules,
+  autoPlay = false,
+}: {
+  model: XRayModel;
+  rules?: RuleReport | undefined;
+  autoPlay?: boolean;
+}) {
+  const [index, setIndex] = useState(0);
+  const [view, setView] = useState<"money" | "permission">("money");
+  const [playing, setPlaying] = useState(
+    () =>
+      autoPlay &&
+      !document.hidden &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  const [details, setDetails] = useState(false);
+  useEffect(() => {
+    if (!playing || !model.steps.length) return;
+    const timer = setInterval(
+      () =>
+        setIndex((i) => {
+          if (i >= model.steps.length - 1) {
+            setPlaying(false);
+            return i;
+          }
+          return i + 1;
+        }),
+      1300,
+    );
+    const stop = () => {
+      if (document.hidden) setPlaying(false);
+    };
+    document.addEventListener("visibilitychange", stop);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", stop);
+    };
+  }, [playing, model.steps.length]);
+  useEffect(() => {
+    const active = model.steps[index];
+    if (playing && active?.kind !== "unknown" && active) setView(active.kind);
+  }, [index, playing, model]);
+  const step = model.steps[index];
+  const isFlagged = step ? flagged(step, rules) : false;
+  const visibleFlow = step?.kind === view && !!step.from;
+  const outcome =
+    model.execution === "succeeded"
+      ? "Recorded in successful execution"
+      : model.execution === "failed"
+        ? "Attempted only · transaction failed"
+        : "Execution not established";
+  return (
+    <section
+      className="xray"
+      data-testid="transaction-xray"
+      aria-label="Transaction X-Ray"
+    >
+      <div className="xray-heading">
+        <div>
+          <p className="eyebrow">TRANSACTION X-RAY / HISTORICAL EVIDENCE</p>
+          <h3>Look inside the transaction.</h3>
+        </div>
+        <span className="xray-outcome">
+          {model.execution === "succeeded"
+            ? "Successful execution"
+            : model.execution === "failed"
+              ? "Failed execution: attempts only"
+              : "Execution unknown"}
+        </span>
+      </div>
+      <p>
+        Play the recorded instructions. Switch lenses to see decoded transfers
+        or selected account permissions.
+      </p>
+      <div className="xray-controls">
+        <button
+          type="button"
+          aria-pressed={view === "money"}
+          onClick={() => {
+            setPlaying(false);
+            setView("money");
+          }}
+        >
+          Money
+        </button>
+        <button
+          type="button"
+          aria-pressed={view === "permission"}
+          onClick={() => {
+            setPlaying(false);
+            setView("permission");
+          }}
+        >
+          Permissions
+        </button>
+        <button
+          type="button"
+          disabled={!model.steps.length}
+          onClick={() => {
+            if (index >= model.steps.length - 1) setIndex(0);
+            setPlaying(!playing);
+          }}
+        >
+          {playing ? "Pause X-Ray" : "Play X-Ray"}
+        </button>
+        <button
+          type="button"
+          disabled={!index}
+          onClick={() => {
+            setPlaying(false);
+            setIndex(index - 1);
+          }}
+        >
+          Previous step
+        </button>
+        <button
+          type="button"
+          disabled={index >= model.steps.length - 1}
+          onClick={() => {
+            setPlaying(false);
+            setIndex(index + 1);
+          }}
+        >
+          Next step
+        </button>
+      </div>
+      {rules && (
+        <p className="xray-rule-note">
+          Pro preferences ·{" "}
+          {rules.status === "flagged"
+            ? "Flagged"
+            : rules.status === "incomplete"
+              ? "Incomplete"
+              : rules.status === "within-rule"
+                ? "Within checked rules"
+                : "No rules enabled"}
+          . {rules.checks.find((c) => c.name === "Network fee")?.explanation}{" "}
+          Highlighted instructions match your saved alerts or are outside your
+          allowed program list. Incomplete checks remain incomplete.
+        </p>
+      )}
+      {step ? (
+        <>
+          <div
+            className={`xray-stage ${visibleFlow && step.kind === "permission" ? "xray-permission-flow" : ""} ${playing && model.execution === "succeeded" ? "xray-running" : ""} ${isFlagged ? "xray-flagged" : ""}`}
+          >
+            <p className="xray-position">
+              {index + 1} / {model.steps.length} · {step.position} · {outcome}
+              {isFlagged ? " · YOUR RULE FLAGGED THIS STEP" : ""}
+            </p>
+            <h4>{step.label}</h4>
+            <button
+              className="xray-diagram"
+              type="button"
+              onClick={() => setDetails(!details)}
+              aria-label="Inspect current instruction"
+            >
+              <span className="xray-node">
+                <small>
+                  {visibleFlow ? "Source account" : "Referenced program"}
+                </small>
+                <strong>
+                  {short(
+                    visibleFlow
+                      ? (step.from ?? "Unknown")
+                      : step.program || "Unresolved",
+                  )}
+                </strong>
+              </span>
+              <svg
+                viewBox="0 0 200 60"
+                role="img"
+                aria-label={
+                  visibleFlow
+                    ? "Decoded instruction relationship"
+                    : "Operation not decoded in this lens"
+                }
+              >
+                <path
+                  className={
+                    !visibleFlow
+                      ? "xray-unknown"
+                      : model.execution === "succeeded"
+                        ? "xray-edge"
+                        : "xray-attempt"
+                  }
+                  d="M 5 30 L 190 30"
+                />
+                <path className="xray-arrow" d="M 175 20 L 190 30 L 175 40" />
+              </svg>
+              <span className="xray-node">
+                <small>
+                  {visibleFlow
+                    ? step.kind === "money"
+                      ? "Destination account"
+                      : "Permission endpoint"
+                    : "Coverage"}
+                </small>
+                <strong>
+                  {visibleFlow
+                    ? short(step.to ?? "Account operation")
+                    : step.kind === "unknown"
+                      ? "Not decoded"
+                      : "Switch lens"}
+                </strong>
+              </span>
+            </button>
+            {visibleFlow && step.amount !== undefined && (
+              <p className="xray-amount">
+                {step.decimals !== undefined
+                  ? displayUnits(step.amount, step.decimals)
+                  : `${step.amount} base units`}{" "}
+                {step.asset === "SOL" ? "SOL" : "tokens"}
+                <span>
+                  {model.execution === "failed"
+                    ? "Requested amount · not applied"
+                    : "Recorded instruction amount"}
+                </span>
+              </p>
+            )}
+            <p>{step.details}</p>
+            {details && (
+              <div className="xray-evidence">
+                <p>Program: {step.program || "Unresolved"}</p>
+                {step.from && <p>Source account: {step.from}</p>}
+                {step.to && <p>Endpoint: {step.to}</p>}
+                {step.asset && <p>Asset: {step.asset}</p>}
+                {step.instructionData && (
+                  <p className="xray-raw">
+                    Instruction bytes / base58: {step.instructionData}
+                  </p>
+                )}
+                {step.accountAddresses && (
+                  <p className="xray-raw">
+                    Instruction accounts: {step.accountAddresses.join(", ")}
+                  </p>
+                )}
+                <p>{outcome}. No intermediate balances are simulated.</p>
+              </div>
+            )}
+          </div>
+          <label className="xray-scrub">
+            Recorded step{" "}
+            <input
+              type="range"
+              min="0"
+              max={model.steps.length - 1}
+              value={index}
+              onChange={(e) => {
+                setPlaying(false);
+                setIndex(Number(e.target.value));
+              }}
+            />
+          </label>
+          <div className="xray-steps">
+            {model.steps.map((s, i) => (
+              <button
+                type="button"
+                key={s.id}
+                className={`${i === index ? "xray-selected" : ""} ${flagged(s, rules) ? "xray-alert" : ""}`}
+                onClick={() => {
+                  setPlaying(false);
+                  setIndex(i);
+                  setView(s.kind === "permission" ? "permission" : "money");
+                  setDetails(true);
+                }}
+              >
+                {i + 1} · {s.label}
+                {flagged(s, rules) ? " · Flagged" : ""}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p>No recorded instruction steps available.</p>
+      )}
+      <details>
+        <summary>Network fee, net balance changes & coverage</summary>
+        <p>
+          Network fee:{" "}
+          {model.execution !== "unknown" &&
+          model.insights.feeLamports !== undefined
+            ? `${displayUnits(model.insights.feeLamports, 9)} SOL`
+            : "Unavailable"}
+        </p>
+        <p>
+          These are final net account changes, not profit/loss or intermediate
+          balances.
+        </p>
+        {model.execution !== "unknown" &&
+          model.insights.balanceChanges.map((c) => (
+            <p key={`${c.account}-${c.asset}`}>
+              {short(c.account)} · {displayUnits(c.change, c.decimals)}{" "}
+              {c.asset === "SOL" ? "SOL" : "tokens"} · {c.asset}
+            </p>
+          ))}
+        {[...model.gaps, ...model.insights.coverage].map((g) => (
+          <p key={g}>{g}</p>
+        ))}
+      </details>
+      <p className="small muted">
+        Animation follows recorded instruction order, not real execution timing.
+        Gray steps are not decoded. This does not check current permissions,
+        program reputation or future safety. No extra RPC request is made by
+        playback.
+      </p>
+      {!rules && <a href="#pro">Apply your personal rules with Pro →</a>}
+    </section>
+  );
+}

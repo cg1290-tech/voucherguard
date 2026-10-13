@@ -342,7 +342,7 @@ test("Pro reviews a Solscan link without policy setup and exports fetched eviden
     .getByLabel("Solscan transaction link", { exact: true })
     .fill(`https://solscan.io/tx/${signature}`);
   await page
-    .getByRole("button", { name: "Review transaction", exact: true })
+    .getByRole("button", { name: "Play transaction", exact: true })
     .click();
   await expect(page.getByTestId("pro-transaction-result")).toContainText(
     "Transaction evidence verified",
@@ -364,7 +364,7 @@ test("Pro reviews a Solscan link without policy setup and exports fetched eviden
   ).toBeTruthy();
   await page.getByLabel("Also check my custom policy", { exact: true }).check();
   await page
-    .getByRole("button", { name: "Review transaction", exact: true })
+    .getByRole("button", { name: "Play transaction", exact: true })
     .click();
   await expect(page.getByTestId("pro-transaction-result")).toContainText(
     "Custom policy: INDETERMINATE",
@@ -429,7 +429,7 @@ test("Pro automatically highlights transaction fees, inner approvals and failed 
     .getByLabel("Solscan transaction link", { exact: true })
     .fill(`https://solscan.io/tx/${signature}`);
   await page
-    .getByRole("button", { name: "Review transaction", exact: true })
+    .getByRole("button", { name: "Play transaction", exact: true })
     .click();
   const insights = page.getByTestId("pro-insights");
   await expect(insights).toContainText("0.00001 SOL");
@@ -461,7 +461,7 @@ test("Pro automatically highlights transaction fees, inner approvals and failed 
   wire.result.meta.err = { InstructionError: [1, "test"] };
   wire.result.transaction.message.instructions = [];
   await page
-    .getByRole("button", { name: "Review transaction", exact: true })
+    .getByRole("button", { name: "Play transaction", exact: true })
     .click();
   await expect(insights).toContainText("attempted; transaction failed");
   await expect(insights).toContainText("not applied");
@@ -496,7 +496,7 @@ test("local Pro history, cards and comparisons do not make extra RPC requests", 
       "https://solscan.io/tx/4wMpYs4wHJX8ArjcTBqZ9pTV1erxAJiqHbUsHkUq44kb8wELDZtRem3k2ZjYQW4kF99TPXe4HhR8hRHJ29DbAvTa",
     );
   await page
-    .getByRole("button", { name: "Review transaction", exact: true })
+    .getByRole("button", { name: "Play transaction", exact: true })
     .click();
   await expect(
     page.getByRole("button", { name: "Save current reviews" }),
@@ -575,7 +575,7 @@ test("transaction rules persist and use existing RPC evidence with immutable exp
     "https://solscan.io/tx/4wMpYs4wHJX8ArjcTBqZ9pTV1erxAJiqHbUsHkUq44kb8wELDZtRem3k2ZjYQW4kF99TPXe4HhR8hRHJ29DbAvTa";
   await page.getByLabel("Solscan transaction link").fill(link);
   await page
-    .getByRole("button", { name: "Review transaction", exact: true })
+    .getByRole("button", { name: "Play transaction", exact: true })
     .click();
   await expect(page.getByTestId("transaction-rule-results")).toContainText(
     "Your rules flagged",
@@ -612,7 +612,7 @@ test("transaction rules persist and use existing RPC evidence with immutable exp
   expect(calls).toBe(1);
   await page.getByLabel("Solscan transaction link").fill(link);
   await page
-    .getByRole("button", { name: "Review transaction", exact: true })
+    .getByRole("button", { name: "Play transaction", exact: true })
     .click();
   await expect(page.getByTestId("transaction-rule-results")).toContainText(
     "Within your checked rules",
@@ -622,4 +622,70 @@ test("transaction rules persist and use existing RPC evidence with immutable exp
     path: "../VoucherGuard-Pro-transaction-rules.png",
     fullPage: true,
   });
+});
+
+test("Pro X-Ray flags saved personal rules without another transaction lookup", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await mockProStatus(page, {
+    status: "eligible",
+    message: "Verified",
+    address: address(9),
+  });
+  const fixture = JSON.parse(
+    await readFile("tests/fixtures/settle-tx.json", "utf8"),
+  );
+  const { base58 } = await import("@scure/base");
+  fixture.result.transaction.message.accountKeys.push(
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  );
+  const data = new Uint8Array(9);
+  data[0] = 4;
+  new DataView(data.buffer).setBigUint64(1, 1000000n, true);
+  fixture.result.meta.innerInstructions = [
+    {
+      index: 0,
+      instructions: [
+        { programIdIndex: 5, accounts: [1, 0, 0], data: base58.encode(data) },
+      ],
+    },
+  ];
+  let calls = 0;
+  await page.route("**/api/solana-rpc", async (route) => {
+    calls++;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(fixture),
+    });
+  });
+  await page.goto("./pro.html");
+  await page
+    .getByLabel("Solscan transaction link")
+    .fill(fixture.result.transaction.signatures[0]);
+  await page
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  const xray = page.getByTestId("transaction-xray");
+  await expect(xray).toContainText("Pro preferences");
+  await xray
+    .getByRole("button", {
+      name: "2 · Spending delegation · Flagged",
+      exact: true,
+    })
+    .click();
+  await expect(xray.locator(".xray-stage")).toHaveClass(/xray-flagged/);
+  await expect(xray).toContainText("YOUR RULE FLAGGED THIS STEP");
+  expect(calls).toBe(1);
+  const pending = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download review", exact: true })
+    .click();
+  const d = await pending;
+  const path = await d.path();
+  if (!path) throw Error("Missing export");
+  const report = JSON.parse(await readFile(path, "utf8"));
+  expect(report.results[0].review.xray.steps[1].kind).toBe("permission");
+  await xray.screenshot({ path: "../VoucherGuard-XRay-pro.png" });
 });

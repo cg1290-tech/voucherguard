@@ -143,3 +143,77 @@ test("default production Pro stays locked with an unset mint and has no test byp
   ).toBe(true);
   await page.locator("#pro").screenshot({ path: "docs/pro-coming-soon.png" });
 });
+
+test("Free X-Ray loads once, plays recorded money and permissions, and keeps failed attempts explicit", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const fixture = JSON.parse(
+    await readFile("tests/fixtures/settle-tx.json", "utf8"),
+  );
+  const { base58 } = await import("@scure/base");
+  const bytes = new Uint8Array(12);
+  new DataView(bytes.buffer).setUint32(0, 2, true);
+  new DataView(bytes.buffer).setBigUint64(4, 1000000000n, true);
+  fixture.result.transaction.message.accountKeys.push(
+    "11111111111111111111111111111111",
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  );
+  const approval = new Uint8Array(9);
+  approval[0] = 4;
+  new DataView(approval.buffer).setBigUint64(1, 1000000n, true);
+  fixture.result.transaction.message.instructions = [
+    { programIdIndex: 5, accounts: [0, 1], data: base58.encode(bytes) },
+    { programIdIndex: 6, accounts: [1, 0, 0], data: base58.encode(approval) },
+  ];
+  fixture.result.meta.innerInstructions = [];
+  let calls = 0;
+  await page.route("**/api/solana-rpc", async (route) => {
+    calls++;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(fixture),
+    });
+  });
+  await page.goto("./");
+  await page
+    .getByTestId("quick-input")
+    .fill(`https://solscan.io/tx/${fixture.result.transaction.signatures[0]}`);
+  await page
+    .locator("#quick-check")
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  const xray = page.getByTestId("transaction-xray");
+  await expect(xray).toBeVisible();
+  await expect(xray).toContainText("SOL transfer instruction");
+  await xray
+    .getByRole("button", { name: "Inspect current instruction" })
+    .click();
+  await expect(xray).toContainText("No intermediate balances are simulated");
+  await xray.getByRole("button", { name: "Next step" }).click();
+  await xray.getByRole("button", { name: "Permissions", exact: true }).click();
+  await expect(xray).toContainText("Spending delegation");
+  await expect(xray).toContainText("Permission endpoint");
+  await xray.getByRole("button", { name: "Play X-Ray" }).click();
+  await expect(xray.getByRole("button", { name: "Pause X-Ray" })).toBeVisible();
+  await xray.getByRole("button", { name: "Pause X-Ray" }).click();
+  expect(calls).toBe(1);
+  await expect(page.getByTestId("quick-unsupported")).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(xray).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await xray.screenshot({ path: "../VoucherGuard-XRay-free-mobile.png" });
+  fixture.result.meta.err = { InstructionError: [1, "test"] };
+  await page
+    .locator("#quick-check")
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  await expect(xray).toContainText("Attempted only");
+  await expect(xray.locator(".xray-stage")).not.toHaveClass(/xray-running/);
+  expect(calls).toBe(2);
+});
