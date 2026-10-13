@@ -217,3 +217,32 @@
   color: #f6d178;
   border-color: #f6d178;
 }
+
+.xray-focus {
+  padding: 1rem;
+  border: 1px solid #52654b;
+  border-radius: 12px;
+}
+.xray-focus label {
+  display: block;
+  margin-bottom: 0.6rem;
+  font-weight: 700;
+}
+.xray-focus select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0.8rem;
+  background: #090d0c;
+  color: #e9eee9;
+  border: 1px solid #52654b;
+  border-radius: 8px;
+  font: inherit;
+}
+.xray .xray-focus-node {
+  border: 2px solid #b5f878;
+  background: #243626;
+}
+.xray-focus-role {
+  color: #b5f878;
+}

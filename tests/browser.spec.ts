@@ -198,6 +198,15 @@ test("Free X-Ray loads once, plays recorded money and permissions, and keeps fai
   await xray.getByRole("button", { name: "Play X-Ray" }).click();
   await expect(xray.getByRole("button", { name: "Pause X-Ray" })).toBeVisible();
   await xray.getByRole("button", { name: "Pause X-Ray" }).click();
+  await xray
+    .getByLabel("My wallet / account")
+    .selectOption(fixture.result.transaction.message.accountKeys[1]);
+  await expect(xray.getByRole("status")).toContainText("2 of 2 recorded steps");
+  await expect(xray).toContainText("To selected account");
+  await expect(xray.locator(".xray-focus-node")).toHaveCount(1);
+  await xray.getByRole("button", { name: "Next step" }).click();
+  await expect(xray).toContainText("From selected account");
+  await xray.getByLabel("My wallet / account").selectOption("");
   expect(calls).toBe(1);
   await expect(page.getByTestId("quick-unsupported")).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
