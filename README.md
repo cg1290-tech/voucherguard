@@ -17,12 +17,15 @@ AI agents can authorize spending. A valid signature alone does not establish tha
 | Capability | Free | Pro |
 | --- | --- | --- |
 | One-link X-Ray with Money/Permissions lenses | Yes, no wallet required | Yes |
+| Failure explanation, recorded fee and top-level failure point | Yes | Yes |
 | My wallet/account focus using direct recorded references | Yes | Yes |
 | Pause, scrub and inspect recorded instruction evidence | Yes | Yes |
 | Personal fee, delegation, authority and program-list rules | — | Saved per wallet in this browser |
 | Rule highlights on relevant X-Ray steps | — | Yes |
 | Saved reports, comparisons and downloadable evidence cards | — | Yes, local browser storage |
 | Custom voucher policies and voucher-file batches | Advanced manual verification | Policy Builder and up to 100 voucher files |
+
+Failed transactions show recognized runtime errors in plain English and the top-level instruction identified by the recorded error. Custom program codes remain uninterpreted; bounded program logs are diagnostic text, not verified explanations. Pro rule alerts are separate from failure causes.
 
 Select an address already present to replay its directly referenced steps and filter final account balance changes. Token-account ownership is not inferred; missing or undecoded evidence remains explicit.
 

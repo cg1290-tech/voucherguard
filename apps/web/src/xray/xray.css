@@ -246,3 +246,22 @@
 .xray-focus-role {
   color: #b5f878;
 }
+
+.xray-failure {
+  padding: 1rem;
+  margin: 1rem 0;
+  border: 1px solid #f6d178;
+  border-radius: 12px;
+  background: #241d12;
+}
+.xray-failure h4 {
+  font-size: 1.3rem;
+}
+.xray-logs {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
+.xray-stage.xray-failed-step {
+  border: 2px solid #f6d178;
+}

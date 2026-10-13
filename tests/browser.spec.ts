@@ -217,12 +217,31 @@ test("Free X-Ray loads once, plays recorded money and permissions, and keeps fai
     ),
   ).toBe(true);
   await xray.screenshot({ path: "../VoucherGuard-XRay-free-mobile.png" });
-  fixture.result.meta.err = { InstructionError: [1, "test"] };
+  fixture.result.meta.err = { InstructionError: [1, "InsufficientFunds"] };
+  fixture.result.meta.logMessages = [
+    "Program log: <script>untrusted diagnostic</script>",
+  ];
   await page
     .locator("#quick-check")
     .getByRole("button", { name: "Play transaction", exact: true })
     .click();
   await expect(xray).toContainText("Attempted only");
+  await expect(xray.getByTestId("failure-explanation")).toContainText(
+    "An account did not have enough funds",
+  );
+  await xray.getByRole("button", { name: "Show failure point" }).click();
+  await expect(xray.locator(".xray-stage")).toHaveClass(/xray-failed-step/);
+  await expect(xray).toContainText("FAILURE REPORTED HERE");
+  await xray
+    .getByText("Recorded logs & error evidence", { exact: true })
+    .click();
+  await expect(xray.locator(".xray-logs")).toContainText(
+    "<script>untrusted diagnostic</script>",
+  );
+  await expect(xray.locator(".xray-logs script")).toHaveCount(0);
+  await expect(xray.getByTestId("failure-explanation")).toContainText(
+    "Recorded network fee:",
+  );
   await expect(xray.locator(".xray-stage")).not.toHaveClass(/xray-running/);
   expect(calls).toBe(2);
 });

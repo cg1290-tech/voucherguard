@@ -10,6 +10,8 @@ import {
   type QuickExtractResult,
 } from "../quick/extract";
 
+import { explainFailure, type FailureEvidence } from "./failure";
+
 const SYSTEM = "11111111111111111111111111111111";
 const TOKEN = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 const TOKEN2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
@@ -45,12 +47,14 @@ export interface XRayStep {
   permissionAction?: string;
   instructionData?: string;
   accountAddresses?: string[];
+  instructionIndex?: number;
 }
 export interface XRayModel {
   execution: "succeeded" | "failed" | "unknown";
   steps: XRayStep[];
   gaps: string[];
   insights: TransactionInsights;
+  failure?: FailureEvidence;
 }
 /** Recorded instruction order, not simulated intermediate balances or an audit of arbitrary programs. */
 export function buildXRay(
@@ -77,6 +81,8 @@ export function buildXRay(
     insights,
   };
   const top = array(msg.instructions);
+  const failure = explainFailure(meta, top.length);
+  if (failure) model.failure = failure;
   const inner = new Map<number, unknown[]>();
   if (!Array.isArray(msg.instructions))
     model.gaps.push("Top-level instructions unavailable.");
@@ -129,7 +135,7 @@ export function buildXRay(
       return undefined;
     return { mint, decimals };
   };
-  function decode(value: unknown, position: string) {
+  function decode(value: unknown, position: string, instructionIndex: number) {
     if (model.steps.length >= 200) return;
     const ix = object(value),
       pi = ix.programIdIndex;
@@ -138,6 +144,7 @@ export function buildXRay(
         ? (keys[pi] ?? "")
         : "";
     const step: XRayStep = {
+      instructionIndex,
       id: position,
       position,
       program,
@@ -246,9 +253,9 @@ export function buildXRay(
     }
   }
   top.forEach((ix, i) => {
-    decode(ix, `Instruction ${i + 1}`);
+    decode(ix, `Instruction ${i + 1}`, i);
     inner.get(i)?.forEach((nested, j) => {
-      decode(nested, `Inner ${i}.${j + 1}`);
+      decode(nested, `Inner ${i}.${j + 1}`, i);
     });
   });
   const count =
