@@ -11,6 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import scenarios from "./fixtures.json";
+import { OfficialToken } from "./OfficialToken";
 import "./style.css";
 import { Pro } from "./pro/Pro";
 import { applyPolicyToDocument } from "./pro/policy";
@@ -241,11 +242,7 @@ function App() {
             <p className="small muted">
               Pro tools are served only with a Worker-issued holder session.
             </p>
-            <p className="small muted">
-              <a href="https://pump.fun/coin/6haciZiuNuUvBvUnJa6SFB7bsxnpoW3Bz4R2cmpRpump">
-                Official $VG token on Solana ↗
-              </a>
-            </p>
+            <OfficialToken />
           </aside>
         </section>
         <QuickCheck />
