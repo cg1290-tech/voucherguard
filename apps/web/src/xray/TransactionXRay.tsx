@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { displayUnits } from "../pro/transaction-insights";
 import type { RuleReport } from "../pro/transaction-rules";
 import type { XRayModel, XRayStep } from "./model";
+import { focusAccounts, involvesAccount } from "./wallet-focus";
 import "./xray.css";
 
 const short = (s: string) =>
@@ -27,6 +28,16 @@ export function TransactionXRay({
   rules?: RuleReport | undefined;
   autoPlay?: boolean;
 }) {
+  const focusId = useId();
+  const [focus, setFocus] = useState("");
+  const accounts = focusAccounts(model);
+  const steps = useMemo(
+    () =>
+      focus
+        ? model.steps.filter((s) => involvesAccount(s, focus))
+        : model.steps,
+    [model, focus],
+  );
   const [index, setIndex] = useState(0);
   const [view, setView] = useState<"money" | "permission">("money");
   const [playing, setPlaying] = useState(
@@ -37,11 +48,11 @@ export function TransactionXRay({
   );
   const [details, setDetails] = useState(false);
   useEffect(() => {
-    if (!playing || !model.steps.length) return;
+    if (!playing || !steps.length) return;
     const timer = setInterval(
       () =>
         setIndex((i) => {
-          if (i >= model.steps.length - 1) {
+          if (i >= steps.length - 1) {
             setPlaying(false);
             return i;
           }
@@ -57,12 +68,12 @@ export function TransactionXRay({
       clearInterval(timer);
       document.removeEventListener("visibilitychange", stop);
     };
-  }, [playing, model.steps.length]);
+  }, [playing, steps.length]);
   useEffect(() => {
-    const active = model.steps[index];
+    const active = steps[index];
     if (playing && active?.kind !== "unknown" && active) setView(active.kind);
-  }, [index, playing, model]);
-  const step = model.steps[index];
+  }, [index, playing, steps]);
+  const step = steps[index];
   const isFlagged = step ? flagged(step, rules) : false;
   const visibleFlow = step?.kind === view && !!step.from;
   const outcome =
@@ -94,6 +105,44 @@ export function TransactionXRay({
         Play the recorded instructions. Switch lenses to see decoded transfers
         or selected account permissions.
       </p>
+      <div className="xray-focus">
+        <label htmlFor={focusId}>My wallet / account</label>
+        <select
+          id={focusId}
+          value={focus}
+          onChange={(e) => {
+            setPlaying(false);
+            setIndex(0);
+            setDetails(false);
+            setFocus(e.target.value);
+            const first = model.steps.find(
+              (s) => !e.target.value || involvesAccount(s, e.target.value),
+            );
+            setView(first?.kind === "permission" ? "permission" : "money");
+          }}
+        >
+          <option value="">Whole transaction</option>
+          {accounts.map((account) => (
+            <option key={account} value={account}>
+              {account}
+            </option>
+          ))}
+        </select>
+        <p className="small muted">
+          Choose an address already present. Only direct account references are
+          matched; token-account ownership is not inferred. No wallet connection
+          needed.
+        </p>
+        {focus && (
+          <p role="status">
+            {steps.length} of {model.steps.length} recorded steps reference this
+            account. {steps.filter((s) => s.kind === "money").length} decoded
+            transfers · {steps.filter((s) => s.kind === "permission").length}{" "}
+            selected permission operations ·{" "}
+            {steps.filter((s) => s.kind === "unknown").length} undecoded steps.
+          </p>
+        )}
+      </div>
       <div className="xray-controls">
         <button
           type="button"
@@ -117,9 +166,9 @@ export function TransactionXRay({
         </button>
         <button
           type="button"
-          disabled={!model.steps.length}
+          disabled={!steps.length}
           onClick={() => {
-            if (index >= model.steps.length - 1) setIndex(0);
+            if (index >= steps.length - 1) setIndex(0);
             setPlaying(!playing);
           }}
         >
@@ -137,7 +186,7 @@ export function TransactionXRay({
         </button>
         <button
           type="button"
-          disabled={index >= model.steps.length - 1}
+          disabled={index >= steps.length - 1}
           onClick={() => {
             setPlaying(false);
             setIndex(index + 1);
@@ -167,17 +216,30 @@ export function TransactionXRay({
             className={`xray-stage ${visibleFlow && step.kind === "permission" ? "xray-permission-flow" : ""} ${playing && model.execution === "succeeded" ? "xray-running" : ""} ${isFlagged ? "xray-flagged" : ""}`}
           >
             <p className="xray-position">
-              {index + 1} / {model.steps.length} · {step.position} · {outcome}
+              {index + 1} / {steps.length} · {step.position} · {outcome}
               {isFlagged ? " · YOUR RULE FLAGGED THIS STEP" : ""}
             </p>
             <h4>{step.label}</h4>
+            {focus && (
+              <p className="xray-focus-role">
+                {step.from === focus && step.to === focus
+                  ? "Selected account is both endpoints"
+                  : step.from === focus
+                    ? "From selected account"
+                    : step.to === focus
+                      ? "To selected account"
+                      : "Selected account referenced · role not established"}
+              </p>
+            )}
             <button
               className="xray-diagram"
               type="button"
               onClick={() => setDetails(!details)}
               aria-label="Inspect current instruction"
             >
-              <span className="xray-node">
+              <span
+                className={`xray-node ${visibleFlow && step.from === focus ? "xray-focus-node" : ""}`}
+              >
                 <small>
                   {visibleFlow ? "Source account" : "Referenced program"}
                 </small>
@@ -210,7 +272,9 @@ export function TransactionXRay({
                 />
                 <path className="xray-arrow" d="M 175 20 L 190 30 L 175 40" />
               </svg>
-              <span className="xray-node">
+              <span
+                className={`xray-node ${visibleFlow && step.to === focus ? "xray-focus-node" : ""}`}
+              >
                 <small>
                   {visibleFlow
                     ? step.kind === "money"
@@ -266,7 +330,7 @@ export function TransactionXRay({
             <input
               type="range"
               min="0"
-              max={model.steps.length - 1}
+              max={steps.length - 1}
               value={index}
               onChange={(e) => {
                 setPlaying(false);
@@ -275,7 +339,7 @@ export function TransactionXRay({
             />
           </label>
           <div className="xray-steps">
-            {model.steps.map((s, i) => (
+            {steps.map((s, i) => (
               <button
                 type="button"
                 key={s.id}
@@ -294,7 +358,11 @@ export function TransactionXRay({
           </div>
         </>
       ) : (
-        <p>No recorded instruction steps available.</p>
+        <p>
+          {focus
+            ? "No recorded steps reference this account. This does not prove no effects or permissions."
+            : "No recorded instruction steps available."}
+        </p>
       )}
       <details>
         <summary>Network fee, net balance changes & coverage</summary>
@@ -310,12 +378,14 @@ export function TransactionXRay({
           balances.
         </p>
         {model.execution !== "unknown" &&
-          model.insights.balanceChanges.map((c) => (
-            <p key={`${c.account}-${c.asset}`}>
-              {short(c.account)} · {displayUnits(c.change, c.decimals)}{" "}
-              {c.asset === "SOL" ? "SOL" : "tokens"} · {c.asset}
-            </p>
-          ))}
+          model.insights.balanceChanges
+            .filter((c) => !focus || c.account === focus)
+            .map((c) => (
+              <p key={`${c.account}-${c.asset}`}>
+                {short(c.account)} · {displayUnits(c.change, c.decimals)}{" "}
+                {c.asset === "SOL" ? "SOL" : "tokens"} · {c.asset}
+              </p>
+            ))}
         {[...model.gaps, ...model.insights.coverage].map((g) => (
           <p key={g}>{g}</p>
         ))}

@@ -2,6 +2,11 @@ import { base58 } from "@scure/base";
 import { describe, expect, it, vi } from "vitest";
 import { buildXRay, loadXRay } from "../apps/web/src/xray/model";
 
+import {
+  focusAccounts,
+  involvesAccount,
+} from "../apps/web/src/xray/wallet-focus";
+
 const key = (n: number) => base58.encode(new Uint8Array(32).fill(n));
 const system = "11111111111111111111111111111111";
 const token = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
@@ -59,6 +64,39 @@ function tx() {
   };
 }
 describe("Transaction X-Ray", () => {
+  it("focuses direct endpoints and unknown account references without inferring ownership", () => {
+    const model = buildXRay(tx());
+    const first = model.steps[0];
+    if (!first) throw Error("Missing fixture step");
+    expect(involvesAccount(first, key(1))).toBe(true);
+    expect(involvesAccount(first, key(2))).toBe(true);
+    expect(involvesAccount(first, key(9))).toBe(false);
+    expect(involvesAccount(first, "")).toBe(false);
+    const unknown = {
+      id: "unknown",
+      position: "Instruction 9",
+      program: key(3),
+      label: "Unknown",
+      details: "Not decoded",
+      kind: "unknown" as const,
+      accountAddresses: [key(9)],
+    };
+    expect(involvesAccount(unknown, key(9))).toBe(true);
+    expect(involvesAccount({ ...unknown, accountAddresses: [] }, key(9))).toBe(
+      false,
+    );
+    model.insights.balanceChanges.push({
+      account: key(8),
+      owner: key(9),
+      asset: key(7),
+      change: "10",
+      decimals: 6,
+    });
+    const accounts = focusAccounts(model);
+    expect(accounts).toContain(key(8));
+    expect(accounts).not.toContain(key(9));
+    expect(new Set(accounts).size).toBe(accounts.length);
+  });
   it("walks top-level and inner instructions in recorded order and keeps unknown programs explicit", () => {
     const m = buildXRay(tx());
     expect(m.steps.map((s) => s.position)).toEqual([
