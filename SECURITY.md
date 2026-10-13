@@ -40,7 +40,7 @@ Private vulnerability reporting is enabled for `cg1290-tech/voucherguard`. Use t
 
 Do not post exploit details or secrets in public issues. Include affected version, minimal reproduction, violated invariant, trust assumptions and expected/observed behavior. This project currently promises no response SLA or bounty.
 
-Versions 0.1.x and 0.2.x are in scope for initial maintenance. The 0.2.0 release remains a pre-release, not a production security certification. Independent review remains required before relying on it for consequential payment authorization.
+Versions 0.1.x, 0.2.x and 0.3.x are in scope for initial maintenance. The 0.3.0 release remains a pre-release, not a production security certification. Independent review remains required before relying on it for consequential payment authorization.
 
 ## Optional Pro holder access
 
