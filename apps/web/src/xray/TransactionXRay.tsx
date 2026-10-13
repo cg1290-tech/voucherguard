@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { displayUnits } from "../pro/transaction-insights";
 import type { RuleReport } from "../pro/transaction-rules";
 import type { XRayModel, XRayStep } from "./model";
@@ -28,6 +28,7 @@ export function TransactionXRay({
   rules?: RuleReport | undefined;
   autoPlay?: boolean;
 }) {
+  const focusId = useId();
   const [focus, setFocus] = useState("");
   const accounts = focusAccounts(model);
   const steps = useMemo(
@@ -105,11 +106,11 @@ export function TransactionXRay({
         or selected account permissions.
       </p>
       <div className="xray-focus">
-        <label htmlFor={`wallet-focus-${rules ? "pro" : "free"}`}>
+        <label htmlFor={focusId}>
           My wallet / account
         </label>
         <select
-          id={`wallet-focus-${rules ? "pro" : "free"}`}
+          id={focusId}
           value={focus}
           onChange={(e) => {
             setPlaying(false);
