@@ -11,16 +11,16 @@ import {
   parseTransactionInput,
   type QuickExtractResult,
 } from "../quick/extract";
-
+import { buildXRay, type XRayModel } from "../xray/model";
 import {
   inspectTransaction,
   type TransactionInsights,
 } from "./transaction-insights";
-
 import type { RuleReport } from "./transaction-rules";
 
 export interface TransactionReview {
   transactionRules?: RuleReport;
+  xray?: XRayModel;
   insights: TransactionInsights;
   signature: string;
   result: QuickExtractResult;
@@ -54,7 +54,17 @@ export async function reviewTransaction(
     (!Number.isSafeInteger(tx.blockTime) || tx.blockTime < 0)
   )
     throw Error("Invalid transaction block time.");
-  const result = await historicalVerifyTransaction(signature, tx);
+  let result: QuickExtractResult;
+  try {
+    result = await historicalVerifyTransaction(signature, tx);
+  } catch {
+    result = {
+      kind: "unsupported",
+      signature,
+      message:
+        "Voucher evidence could not be decoded. X-Ray remains available.",
+    };
+  }
   if (result.kind === "historical" && result.blockTime === null) {
     if (result.voucherReport.status === "PASS")
       result.voucherReport.status = "INDETERMINATE";
@@ -73,6 +83,7 @@ export async function reviewTransaction(
     result,
     insights: inspectTransaction(tx),
   };
+  review.xray = buildXRay(tx, review.insights);
   if (!policy || result.kind !== "historical") return review;
   review.policy = structuredClone(policy);
   if (result.blockTime === null) {

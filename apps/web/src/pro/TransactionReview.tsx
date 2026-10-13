@@ -1,6 +1,7 @@
 import type { PolicyDocument } from "@voucherguard/core";
 import { serializeReport } from "@voucherguard/core";
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { TransactionXRay } from "../xray/TransactionXRay";
 import { LocalReports } from "./LocalReports";
 import { proApiBase } from "./pro-session";
 import { TransactionInsights } from "./TransactionInsights";
@@ -179,7 +180,7 @@ export function TransactionReview({
             className="primary"
             disabled={busy || !input.trim()}
           >
-            {busy ? "Reviewing…" : "Review transaction"}
+            {busy ? "Loading…" : "Play transaction"}
           </button>
           <button
             type="button"
@@ -223,6 +224,13 @@ export function TransactionReview({
               >
                 Transaction {row.signature.slice(0, 10)}… ↗
               </a>
+              {row.review?.xray && (
+                <TransactionXRay
+                  model={row.review.xray}
+                  rules={row.review.transactionRules}
+                  autoPlay={row.signature === rows[0]?.signature}
+                />
+              )}
               {row.review?.transactionRules && (
                 <RuleResults report={row.review.transactionRules} />
               )}

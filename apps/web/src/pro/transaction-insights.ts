@@ -222,8 +222,11 @@ export function inspectTransaction(value: unknown): TransactionInsights {
     out.coverage.push(
       "Inner-instruction trace unavailable. Nested authorization changes may be missing.",
     );
+  const seenInner = new Set<unknown>();
   for (const group of list(meta.innerInstructions)) {
     const g = obj(group);
+    if (seenInner.has(g.index)) out.programsComplete = false;
+    seenInner.add(g.index);
     if (
       !Number.isSafeInteger(g.index) ||
       Number(g.index) < 0 ||
