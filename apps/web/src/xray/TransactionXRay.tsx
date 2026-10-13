@@ -80,7 +80,11 @@ export function TransactionXRay({
     model.execution === "succeeded"
       ? "Recorded in successful execution"
       : model.execution === "failed"
-        ? "Attempted only · transaction failed"
+        ? model.failure?.instructionIndex !== undefined &&
+          step?.instructionIndex !== undefined &&
+          step.instructionIndex > model.failure.instructionIndex
+          ? "Not reached · transaction stopped earlier"
+          : "Attempted only · transaction failed"
         : "Execution not established";
   return (
     <section
@@ -105,6 +109,81 @@ export function TransactionXRay({
         Play the recorded instructions. Switch lenses to see decoded transfers
         or selected account permissions.
       </p>
+      {model.failure && (
+        <div className="xray-failure" data-testid="failure-explanation">
+          <p className="eyebrow">WHY DID IT FAIL?</p>
+          <h4>
+            {model.failure.instructionIndex !== undefined
+              ? `Failure reported at instruction ${model.failure.instructionIndex + 1}`
+              : "Failure point unavailable"}
+          </h4>
+          <p>{model.failure.explanation}</p>
+          <p>Error: {model.failure.code}</p>
+          <p>
+            Recorded network fee:{" "}
+            {model.insights.feeLamports !== undefined
+              ? `${displayUnits(model.insights.feeLamports, 9)} SOL`
+              : "Unavailable"}
+            . The transaction failed; decoded transfers and permission changes
+            must not be treated as applied.
+          </p>
+          {model.failure.instructionIndex !== undefined && (
+            <button
+              type="button"
+              disabled={
+                !model.steps.some(
+                  (s) =>
+                    s.position ===
+                    `Instruction ${(model.failure?.instructionIndex ?? 0) + 1}`,
+                )
+              }
+              onClick={() => {
+                const i = model.steps.findIndex(
+                  (s) =>
+                    s.position ===
+                    `Instruction ${(model.failure?.instructionIndex ?? 0) + 1}`,
+                );
+                if (i < 0) return;
+                setFocus("");
+                setIndex(i);
+                setPlaying(false);
+                setDetails(true);
+                setView(
+                  model.steps[i]?.kind === "permission"
+                    ? "permission"
+                    : "money",
+                );
+              }}
+            >
+              Show failure point
+            </button>
+          )}
+          <p className="small muted">
+            The error identifies a top-level instruction; a nested call may be
+            the source. Pro preference alerts are separate checks, not a
+            diagnosis of the failure.
+          </p>
+          <details>
+            <summary>Recorded logs & error evidence</summary>
+            <p>
+              Program-written diagnostic text is shown as evidence, not a
+              verified explanation.
+            </p>
+            <pre className="xray-logs">
+              {model.failure.logs.length
+                ? model.failure.logs.join("\n")
+                : "No recorded logs available."}
+            </pre>
+            {model.failure.logsIncomplete && (
+              <p>
+                Logs unavailable, malformed or shortened. Display is limited to
+                the last 80 lines, 512 characters per line and 12,000 characters
+                total.
+              </p>
+            )}
+          </details>
+        </div>
+      )}
       <div className="xray-focus">
         <label htmlFor={focusId}>My wallet / account</label>
         <select
@@ -213,11 +292,16 @@ export function TransactionXRay({
       {step ? (
         <>
           <div
-            className={`xray-stage ${visibleFlow && step.kind === "permission" ? "xray-permission-flow" : ""} ${playing && model.execution === "succeeded" ? "xray-running" : ""} ${isFlagged ? "xray-flagged" : ""}`}
+            className={`xray-stage ${visibleFlow && step.kind === "permission" ? "xray-permission-flow" : ""} ${playing && model.execution === "succeeded" ? "xray-running" : ""} ${isFlagged ? "xray-flagged" : ""} ${model.failure?.instructionIndex !== undefined && step.instructionIndex === model.failure.instructionIndex && step.position.startsWith("Instruction ") ? "xray-failed-step" : ""}`}
           >
             <p className="xray-position">
               {index + 1} / {steps.length} · {step.position} · {outcome}
               {isFlagged ? " · YOUR RULE FLAGGED THIS STEP" : ""}
+              {model.failure?.instructionIndex !== undefined &&
+              step.instructionIndex === model.failure.instructionIndex &&
+              step.position.startsWith("Instruction ")
+                ? " · FAILURE REPORTED HERE"
+                : ""}
             </p>
             <h4>{step.label}</h4>
             {focus && (

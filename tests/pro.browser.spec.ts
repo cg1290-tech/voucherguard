@@ -688,4 +688,25 @@ test("Pro X-Ray flags saved personal rules without another transaction lookup", 
   const report = JSON.parse(await readFile(path, "utf8"));
   expect(report.results[0].review.xray.steps[1].kind).toBe("permission");
   await xray.screenshot({ path: "../VoucherGuard-XRay-pro.png" });
+  fixture.result.meta.err = { InstructionError: [0, { Custom: 6001 }] };
+  await page
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  await expect(xray.getByTestId("failure-explanation")).toContainText(
+    "Custom 6001 (0x1771)",
+  );
+  await expect(xray).toContainText("Pro preference alerts are separate checks");
+  await xray.getByRole("button", { name: "Show failure point" }).click();
+  await expect(xray.locator(".xray-stage")).toHaveClass(/xray-failed-step/);
+  expect(calls).toBe(2);
+  const failedDownload = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download review", exact: true })
+    .click();
+  const failedPath = await (await failedDownload).path();
+  if (!failedPath) throw Error("Missing failed export");
+  const failedReport = JSON.parse(await readFile(failedPath, "utf8"));
+  expect(failedReport.results[0].review.xray.failure.code).toBe(
+    "Custom 6001 (0x1771)",
+  );
 });

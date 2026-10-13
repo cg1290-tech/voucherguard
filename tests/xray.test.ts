@@ -151,6 +151,8 @@ describe("Transaction X-Ray", () => {
     const t = tx();
     t.meta.err = { InstructionError: [0, "test"] };
     expect(buildXRay(t).execution).toBe("failed");
+    expect(buildXRay(t).failure?.instructionIndex).toBe(0);
+    expect(buildXRay(t).steps[1]?.instructionIndex).toBe(0);
     const raw = { ...t, meta: { innerInstructions: [] } };
     expect(buildXRay(raw).execution).toBe("unknown");
     expect(buildXRay(raw).gaps.join(" ")).toContain("not established");
