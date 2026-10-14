@@ -290,6 +290,7 @@ function App() {
             </p>
             <p className="muted">
               Transaction lookups and holder verification use read-only RPC.
+              Replay editable rule profiles on the same transaction in Pro.
               Playback, Wallet Impact and personal checks add no RPC calls. The
               Advanced Verification lab independently checks Solana payment
               channel V1 vouchers offline. This is not a complete x402 verifier,

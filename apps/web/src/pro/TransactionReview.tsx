@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { TransactionXRay } from "../xray/TransactionXRay";
 import { LocalReports } from "./LocalReports";
 import { proApiBase } from "./pro-session";
+import { RuleReplay } from "./RuleReplay";
 import { TransactionInsights } from "./TransactionInsights";
 import { RulePreferences, RuleResults } from "./TransactionRules";
 import {
@@ -245,6 +246,13 @@ export function TransactionReview({
               )}
               {row.review?.transactionRules && (
                 <RuleResults report={row.review.transactionRules} />
+              )}
+              {row.review?.transactionRules && (
+                <RuleReplay
+                  review={row.review}
+                  owner={owner}
+                  captured={row.review.transactionRules}
+                />
               )}
               {row.review?.insights && (
                 <TransactionInsights insights={row.review.insights} />

@@ -1,0 +1,60 @@
+.rule-replay {
+  border: 1px solid #343d2e;
+  padding: 24px;
+  margin: 24px 0;
+  background: #10150f;
+}
+.replay-profiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+.replay-profiles button {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+.replay-profiles button[aria-pressed="true"] {
+  border-color: #c7ff75;
+  background: #24331b;
+}
+.rule-replay fieldset {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+.rule-replay select {
+  padding: 10px;
+  background: #141a12;
+  color: inherit;
+  border: 1px solid #46513e;
+}
+.replay-table-scroll {
+  overflow: auto;
+  margin: 20px 0;
+}
+.rule-replay table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.rule-replay th,
+.rule-replay td {
+  padding: 12px;
+  border-bottom: 1px solid #343d2e;
+}
+.rule-replay caption {
+  text-align: left;
+  padding: 12px;
+  font-weight: 700;
+}
+@media (max-width: 600px) {
+  .replay-profiles {
+    grid-template-columns: 1fr;
+  }
+  .rule-replay {
+    padding: 14px;
+  }
+}

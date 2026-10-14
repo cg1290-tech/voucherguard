@@ -583,6 +583,31 @@ test("transaction rules persist and use existing RPC evidence with immutable exp
     "Your rules flagged",
   );
   expect(calls).toBe(1);
+  const replay = page.getByTestId("rule-replay");
+  await replay.getByRole("button", { name: /^Strict/ }).click();
+  await replay.getByLabel("Network fee cap / SOL").selectOption("");
+  await replay
+    .getByLabel("Flag spending delegations", { exact: true })
+    .uncheck();
+  await expect(page.getByTestId("transaction-rule-results")).toContainText(
+    "Your rules flagged",
+  );
+  const replayDownload = page.waitForEvent("download");
+  await replay
+    .getByRole("button", { name: "Export replay comparison" })
+    .click();
+  const replayPath = await (await replayDownload).path();
+  if (!replayPath) throw Error("Missing replay export");
+  const comparison = JSON.parse(await readFile(replayPath, "utf8"));
+  expect(comparison.captured.rules.maxFeeSol).toBe("0.000001");
+  expect(comparison.profiles.Strict.rules.maxFeeSol).toBe("");
+  expect(comparison.profiles.Strict.rules.flagDelegations).toBe(false);
+  expect(comparison.profiles.Custom.rules.maxFeeSol).toBe("0.000001");
+  await replay.getByRole("button", { name: "Reset replay profiles" }).click();
+  await expect(replay.getByLabel("Network fee cap / SOL")).toHaveValue(
+    "0.0001",
+  );
+  expect(calls).toBe(1);
   await page.getByLabel("Maximum network fee / SOL (optional)").fill("0.00001");
   await page
     .getByRole("button", { name: "Use programs from current reviews" })
