@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.4.0] - 2026-10-14
+
+### Added
+
+- Solana Transaction Workspace presentation across the public site, Pro workspace and social preview.
+- Free Wallet Impact: exact recorded before/after balances, grouped token accounts where historical owner/mint/precision agree, and recorded fees without double subtraction.
+- Free Permission Map: clickable account/operation nodes, decoded allowance evidence, directional connections, revocations and authority operations; captured rule highlights in Pro.
+- Free failure explanations for selected recognized Solana runtime errors, reported top-level failure navigation, bounded diagnostic logs and explicit custom-code limitations.
+- My wallet/account focus for directly referenced X-Ray instructions.
+- Pro saved net SOL decrease limits, net token decrease alerts and personal allowed-token mint lists populated from existing reviews.
+- Pro Wallet Impact JSON export with transaction signature, captured rules and evidence coverage.
+- Public official $VG contract address with copy, Solscan and Pump.fun links.
+
+### Validation and scope
+
+- Typecheck, lint, build, 277 unit tests and 17 browser tests pass.
+- Existing transaction data feeds all views and personal rule checks. No additional RPC calls, monitoring, AI services or uploads are introduced. Initial transaction lookups and hosted holder checks still use read-only RPC.
+- Permission Map is limited to 16 nodes/24 connections; X-Ray remains capped at 200 recorded steps. Missing and unsupported evidence stays explicit.
+- No current permission state, current holdings, prices, profit/loss, token reputation or arbitrary-program audit is inferred. Failed operations remain unapplied or not reached.
+- Pro remains Worker-gated for verified 5M VG holders on Solana with a signed authentication challenge. The official mint is 6haciZiuNuUvBvUnJa6SFB7bsxnpoW3Bz4R2cmpRpump.
+- This remains a pre-release without an independent audit. npm packages are prepared for manual distribution, not published to npm.
+
 ## [0.3.0] - 2026-10-13
 
 ### Added

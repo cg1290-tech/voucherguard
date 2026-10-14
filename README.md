@@ -4,7 +4,7 @@
 
 One Solscan link. Understand what changed, explore recorded instructions and find the reported failure point. Free exploration; personal rules and evidence exports with Pro.
 
-[Try Free X-Ray](https://voucherguard.pages.dev/#quick-check) · [Explore Pro](https://voucherguard.pages.dev/#pro) · [Release 0.3.0](https://github.com/cg1290-tech/voucherguard/releases/tag/v0.3.0) · [Source repository](https://github.com/cg1290-tech/voucherguard)
+[Try Free X-Ray](https://voucherguard.pages.dev/#quick-check) · [Explore Pro](https://voucherguard.pages.dev/#pro) · [Release 0.4.0](https://github.com/cg1290-tech/voucherguard/releases/tag/v0.4.0) · [Source repository](https://github.com/cg1290-tech/voucherguard)
 
 VoucherGuard combines a **Free Transaction X-Ray** for selected recorded Solana transaction effects, **Pro personal rule alerts** for $VG holders, and an offline verifier for **Solana Foundation payment channel V1 vouchers**. X-Ray remains useful when no supported voucher is present; unsupported program operations stay visibly undecoded.
 
@@ -39,7 +39,7 @@ Select an address already present to replay its directly referenced steps and fi
 
 Both views use the same existing transaction lookup. Playback and personal rule checks add no RPC calls. Link lookups and hosted holder checks still require read-only RPC; the offline signed-document verifier does not.
 
-[Announcement text and product facts](docs/releases/v0.3.0/ANNOUNCEMENT.md) · [Changelog](CHANGELOG.md)
+[Release 0.4.0 details](docs/releases/v0.4.0/RELEASE.md) · [Changelog](CHANGELOG.md)
 
 ## Scope and protocol
 
