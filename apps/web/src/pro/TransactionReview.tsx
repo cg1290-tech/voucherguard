@@ -167,6 +167,13 @@ export function TransactionReview({
         notice={rulesNotice}
         onSave={storeRules}
         programs={rows.flatMap((row) => row.review?.insights.programs ?? [])}
+        assets={rows.flatMap(
+          (row) =>
+            row.review?.xray?.walletImpact?.wallets
+              .find((w) => w.address === owner)
+              ?.balances.filter((b) => b.asset !== "SOL")
+              .map((b) => b.asset) ?? [],
+        )}
       />
       <form onSubmit={(e) => void run(e)}>
         <label htmlFor="pro-transaction-link">Solscan transaction link</label>

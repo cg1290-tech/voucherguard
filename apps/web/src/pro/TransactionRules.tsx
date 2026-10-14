@@ -9,6 +9,7 @@ export function RulePreferences({
   saved,
   busy,
   programs,
+  assets,
   notice,
   onSave,
 }: {
@@ -16,16 +17,21 @@ export function RulePreferences({
   saved: boolean;
   busy: boolean;
   programs: string[];
+  assets: string[];
   notice: string;
   onSave: (rules: TransactionRules) => void;
 }) {
   const [draft, setDraft] = useState(() => structuredClone(rules));
   const [list, setList] = useState(rules.allowedPrograms.join("\n"));
+  const [assetList, setAssetList] = useState(
+    (rules.allowedAssets ?? []).join("\n"),
+  );
   const [error, setError] = useState("");
   function save() {
     try {
       const next = validateRules({
         ...draft,
+        allowedAssets: assetList.split(/\s+/).filter(Boolean),
         allowedPrograms: list.split(/\s+/).filter(Boolean),
       });
       onSave(next);
@@ -35,6 +41,7 @@ export function RulePreferences({
     }
   }
   const count =
+    Number(rules.restrictAssets) +
     Number(!!rules.maxSolDecrease) +
     Number(rules.flagTokenDecreases) +
     Number(!!rules.maxFeeSol) +
@@ -138,6 +145,33 @@ export function RulePreferences({
               </p>
             </>
           )}
+          <label>
+            <input
+              type="checkbox"
+              checked={draft.restrictAssets ?? false}
+              onChange={(e) =>
+                setDraft({ ...draft, restrictAssets: e.target.checked })
+              }
+            />{" "}
+            Flag balance changes on tokens outside my saved list
+          </label>
+          {draft.restrictAssets && (
+            <>
+              <label htmlFor="rule-assets">Allowed token mint addresses</label>
+              <textarea
+                id="rule-assets"
+                rows={3}
+                maxLength={6000}
+                value={assetList}
+                onChange={(e) => setAssetList(e.target.value)}
+              />
+              <p className="small muted">
+                Up to 64 mint addresses. This is your personal preference list;
+                it does not certify token safety. Applies to nonzero recorded
+                net changes in your authenticated wallet.
+              </p>
+            </>
+          )}
           <div className="pro-link-actions">
             <button type="button" onClick={save}>
               Save transaction preferences
@@ -152,11 +186,23 @@ export function RulePreferences({
             >
               Use programs from current reviews
             </button>
+            <button
+              type="button"
+              disabled={!assets.length}
+              onClick={() => {
+                setAssetList([...new Set(assets)].slice(0, 64).join("\n"));
+                setDraft({ ...draft, restrictAssets: true });
+              }}
+            >
+              Use tokens from my current reviews
+            </button>
           </div>
           <p className="small muted">
-            The program button replaces the draft list. Review it and save to
-            apply. New preferences apply to your next review; existing reports
-            retain the rules used when generated.
+            The import buttons replace their draft lists; the token button uses
+            the first 64 distinct mints with documented ownership in your
+            current reviews. Review it and save to apply. New preferences apply
+            to your next review; existing reports retain the rules used when
+            generated.
           </p>
         </fieldset>
         {error && <p role="alert">{error}</p>}
