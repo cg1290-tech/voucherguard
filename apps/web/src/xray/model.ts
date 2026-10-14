@@ -12,6 +12,8 @@ import {
 
 import { explainFailure, type FailureEvidence } from "./failure";
 
+import { buildWalletImpact, type WalletImpact } from "./wallet-impact";
+
 const SYSTEM = "11111111111111111111111111111111";
 const TOKEN = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 const TOKEN2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
@@ -55,6 +57,7 @@ export interface XRayModel {
   gaps: string[];
   insights: TransactionInsights;
   failure?: FailureEvidence;
+  walletImpact?: WalletImpact;
 }
 /** Recorded instruction order, not simulated intermediate balances or an audit of arbitrary programs. */
 export function buildXRay(
@@ -79,6 +82,7 @@ export function buildXRay(
     steps: [],
     gaps: [],
     insights,
+    walletImpact: buildWalletImpact(raw),
   };
   const top = array(msg.instructions);
   const failure = explainFailure(meta, top.length);

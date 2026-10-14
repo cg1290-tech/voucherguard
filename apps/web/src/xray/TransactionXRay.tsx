@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { displayUnits } from "../pro/transaction-insights";
 import type { RuleReport } from "../pro/transaction-rules";
 import type { XRayModel, XRayStep } from "./model";
+import { WalletImpactView } from "./WalletImpact";
 import { focusAccounts, involvesAccount } from "./wallet-focus";
 import "./xray.css";
 
@@ -92,6 +93,7 @@ export function TransactionXRay({
       data-testid="transaction-xray"
       aria-label="Transaction X-Ray"
     >
+      <WalletImpactView model={model} rules={rules} />
       <div className="xray-heading">
         <div>
           <p className="eyebrow">TRANSACTION X-RAY / HISTORICAL EVIDENCE</p>

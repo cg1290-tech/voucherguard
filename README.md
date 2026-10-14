@@ -17,6 +17,7 @@ AI agents can authorize spending. A valid signature alone does not establish tha
 | Capability | Free | Pro |
 | --- | --- | --- |
 | One-link X-Ray with Money/Permissions lenses | Yes, no wallet required | Yes |
+| Wallet Impact: recorded SOL and grouped token before/after | Yes | Yes, with captured rules and JSON export |
 | Failure explanation, recorded fee and top-level failure point | Yes | Yes |
 | My wallet/account focus using direct recorded references | Yes | Yes |
 | Pause, scrub and inspect recorded instruction evidence | Yes | Yes |
@@ -24,6 +25,8 @@ AI agents can authorize spending. A valid signature alone does not establish tha
 | Rule highlights on relevant X-Ray steps | — | Yes |
 | Saved reports, comparisons and downloadable evidence cards | — | Yes, local browser storage |
 | Custom voucher policies and voucher-file batches | Advanced manual verification | Policy Builder and up to 100 voucher files |
+
+Wallet Impact groups token accounts only when recorded ownership, mint and precision agree before and after. Missing or conflicting records are excluded explicitly. Fee-payer SOL changes already include the fee; totals are historical snapshots, not profit/loss or current holdings.
 
 Failed transactions show recognized runtime errors in plain English and the top-level instruction identified by the recorded error. Custom program codes remain uninterpreted; bounded program logs are diagnostic text, not verified explanations. Pro rule alerts are separate from failure causes.
 
