@@ -742,3 +742,80 @@ test("Pro X-Ray flags saved personal rules without another transaction lookup", 
     "Custom 6001 (0x1771)",
   );
 });
+
+test("personal token list imports existing wallet evidence, persists and exports without extra RPC", async ({
+  page,
+}) => {
+  const owner = address(9);
+  await mockProStatus(page, {
+    status: "eligible",
+    message: "Verified",
+    address: owner,
+  });
+  const fixture = JSON.parse(
+    await readFile("tests/fixtures/settle-tx.json", "utf8"),
+  );
+  const mint = address(8);
+  const tokenBalance = (amount: string) => ({
+    accountIndex: 1,
+    mint,
+    owner,
+    uiTokenAmount: { amount, decimals: 6 },
+  });
+  fixture.result.meta.preTokenBalances = [tokenBalance("1000000")];
+  fixture.result.meta.postTokenBalances = [tokenBalance("2000000")];
+  let calls = 0;
+  await page.route("**/api/solana-rpc", async (route) => {
+    calls++;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(fixture),
+    });
+  });
+  await page.goto("./pro.html");
+  await page
+    .getByLabel("Solscan transaction link")
+    .fill(fixture.result.transaction.signatures[0]);
+  await page
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  await page.getByText(/My transaction rules/).click();
+  await page
+    .getByRole("button", { name: "Use tokens from my current reviews" })
+    .click();
+  await expect(page.getByLabel("Allowed token mint addresses")).toHaveValue(
+    mint,
+  );
+  expect(calls).toBe(1);
+  await page.getByLabel("Allowed token mint addresses").fill(address(7));
+  await page
+    .getByRole("button", { name: "Save transaction preferences" })
+    .click();
+  await page
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  await expect(page.getByTestId("transaction-rule-results")).toContainText(
+    "Wallet allowed tokens",
+  );
+  await expect(page.getByTestId("transaction-rule-results")).toContainText(
+    "not a scam or reputation verdict",
+  );
+  expect(calls).toBe(2);
+  const pending = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download review", exact: true })
+    .click();
+  const path = await (await pending).path();
+  if (!path) throw Error("Missing export");
+  const report = JSON.parse(await readFile(path, "utf8"));
+  expect(report.results[0].review.transactionRules.rules.allowedAssets).toEqual(
+    [address(7)],
+  );
+  await page.reload();
+  await page.getByText(/My transaction rules/).click();
+  await expect(page.getByLabel("Allowed token mint addresses")).toHaveValue(
+    address(7),
+  );
+  expect(calls).toBe(2);
+});

@@ -287,3 +287,117 @@ describe("Wallet Impact guardrails", () => {
     ).toThrow();
   });
 });
+
+describe("Personal allowed tokens", () => {
+  const owner = base58.encode(new Uint8Array(32).fill(9));
+  const mint = base58.encode(new Uint8Array(32).fill(8));
+  const impact = {
+    execution: "succeeded" as const,
+    gaps: [] as string[],
+    wallets: [
+      {
+        address: owner,
+        tokenAccounts: [],
+        balances: [
+          {
+            asset: mint,
+            decimals: 6,
+            before: "1",
+            after: "2",
+            change: "1",
+            accounts: [owner],
+          },
+        ],
+      },
+    ],
+  };
+  const prefs = {
+    ...DEFAULT_RULES,
+    flagDelegations: false,
+    flagAuthorityChanges: false,
+    restrictAssets: true,
+    allowedAssets: [token],
+  };
+  it("flags positive or negative changes outside a saved list without reputation claims", () => {
+    for (const change of ["1", "-1"]) {
+      const r = evaluateRules(
+        inspectTransaction(source),
+        prefs,
+        {
+          ...impact,
+          wallets: [
+            {
+              ...impact.wallets[0],
+              address: owner,
+              tokenAccounts: [],
+              balances: [
+                {
+                  ...impact.wallets[0]?.balances[0],
+                  asset: mint,
+                  decimals: 6,
+                  before: "1",
+                  after: "2",
+                  accounts: [owner],
+                  change,
+                },
+              ],
+            },
+          ],
+        },
+        owner,
+      );
+      expect(r.status).toBe("flagged");
+      expect(r.checks[0]?.explanation).toContain("not a scam");
+    }
+    expect(
+      evaluateRules(
+        inspectTransaction(source),
+        { ...prefs, allowedAssets: [mint] },
+        impact,
+        owner,
+      ).status,
+    ).toBe("within-rule");
+  });
+  it("does not pass missing wallets, unknown execution or incomplete ownership coverage", () => {
+    expect(
+      evaluateRules(inspectTransaction(source), prefs, impact, "other").status,
+    ).toBe("incomplete");
+    expect(
+      evaluateRules(
+        inspectTransaction(source),
+        prefs,
+        { ...impact, execution: "unknown" },
+        owner,
+      ).status,
+    ).toBe("incomplete");
+    expect(
+      evaluateRules(
+        inspectTransaction(source),
+        { ...prefs, allowedAssets: [mint] },
+        { ...impact, gaps: ["missing"] },
+        owner,
+      ).status,
+    ).toBe("incomplete");
+    expect(
+      evaluateRules(
+        inspectTransaction(source),
+        prefs,
+        { ...impact, gaps: ["missing"] },
+        owner,
+      ).status,
+    ).toBe("flagged");
+  });
+  it("migrates old preferences, deduplicates mints and rejects invalid or empty enabled lists", () => {
+    const old = { ...DEFAULT_RULES };
+    delete old.allowedAssets;
+    delete old.restrictAssets;
+    expect(validateRules(old).allowedAssets).toEqual([]);
+    expect(validateRules(old).restrictAssets).toBe(false);
+    expect(
+      validateRules({ ...prefs, allowedAssets: [mint, mint] }).allowedAssets,
+    ).toEqual([mint]);
+    for (const allowedAssets of [[], ["bad"], Array(65).fill(mint)])
+      expect(() => validateRules({ ...prefs, allowedAssets })).toThrow();
+    expect(() => validateRules({ ...prefs, restrictAssets: "true" })).toThrow();
+  });
+});

@@ -2,6 +2,8 @@ import { base58 } from "@scure/base";
 import type { WalletImpact } from "../xray/wallet-impact";
 import { displayUnits, type TransactionInsights } from "./transaction-insights";
 export interface TransactionRules {
+  restrictAssets?: boolean;
+  allowedAssets?: string[];
   maxSolDecrease?: string;
   flagTokenDecreases?: boolean;
   version: 1;
@@ -23,6 +25,8 @@ export interface RuleReport {
 }
 export const DEFAULT_RULES: TransactionRules = {
   version: 1,
+  restrictAssets: false,
+  allowedAssets: [],
   maxSolDecrease: "",
   flagTokenDecreases: false,
   maxFeeSol: "",
@@ -61,6 +65,29 @@ export function validateRules(value: unknown): TransactionRules {
       typeof r.flagTokenDecreases !== "boolean")
   )
     throw Error("Invalid Wallet Impact preferences.");
+  if (
+    (r.restrictAssets !== undefined && typeof r.restrictAssets !== "boolean") ||
+    (r.allowedAssets !== undefined &&
+      (!Array.isArray(r.allowedAssets) || r.allowedAssets.length > 64))
+  )
+    throw Error("Invalid token list preferences.");
+  const allowedAssets: string[] = [];
+  for (const mint of (r.allowedAssets ?? []) as unknown[]) {
+    try {
+      if (
+        typeof mint !== "string" ||
+        mint.length > 44 ||
+        base58.decode(mint).length !== 32
+      )
+        throw Error();
+    } catch {
+      throw Error("Use valid Solana token mint addresses.");
+    }
+    if (!allowedAssets.includes(mint as string))
+      allowedAssets.push(mint as string);
+  }
+  if (r.restrictAssets && !allowedAssets.length)
+    throw Error("Add a token mint or turn off the token list rule.");
   const maxSolDecrease =
     typeof r.maxSolDecrease === "string" ? r.maxSolDecrease.trim() : "";
   if (maxSolDecrease) feeLamports(maxSolDecrease);
@@ -82,6 +109,8 @@ export function validateRules(value: unknown): TransactionRules {
   return {
     version: 1,
     maxFeeSol,
+    restrictAssets: r.restrictAssets === true,
+    allowedAssets,
     maxSolDecrease,
     flagTokenDecreases: r.flagTokenDecreases === true,
     flagDelegations: r.flagDelegations as boolean,
@@ -102,7 +131,7 @@ export function loadRules(
         saved: false,
         notice: "",
       };
-    if (raw.length > 6000) throw Error();
+    if (raw.length > 9000) throw Error();
     return { rules: validateRules(JSON.parse(raw)), saved: true, notice: "" };
   } catch {
     return {
@@ -130,6 +159,29 @@ export function evaluateRules(
   const checks: RuleCheck[] = [];
   const wallet = impact?.wallets.find((w) => w.address === owner);
   const established = impact && impact.execution !== "unknown" && wallet;
+  if (rules.restrictAssets) {
+    const other = established
+      ? wallet.balances.filter(
+          (b) =>
+            b.asset !== "SOL" &&
+            BigInt(b.change) !== 0n &&
+            !rules.allowedAssets?.includes(b.asset),
+        )
+      : [];
+    checks.push({
+      name: "Wallet allowed tokens",
+      status: other.length
+        ? "flagged"
+        : !established || impact.gaps.length
+          ? "incomplete"
+          : "within-rule",
+      explanation: other.length
+        ? `Authenticated wallet ${owner}: recorded net balance changes for token mints outside your saved list: ${other.map((b) => b.asset).join(", ")}. This is a preference mismatch, not a scam or reputation verdict.${impact?.gaps.length ? " Other coverage is incomplete." : ""}`
+        : !established || impact.gaps.length
+          ? "Wallet/token ownership coverage is incomplete; the full list could not be checked."
+          : `All recorded nonzero token balance changes for authenticated wallet ${owner} match your saved mint list. Zero net changes, arbitrary program behavior and current holdings are not checked.`,
+    });
+  }
   if (rules.maxSolDecrease) {
     const sol = established
       ? wallet.balances.find((b) => b.asset === "SOL")
