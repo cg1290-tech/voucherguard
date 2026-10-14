@@ -857,3 +857,100 @@ test("personal token list imports existing wallet evidence, persists and exports
   );
   expect(calls).toBe(2);
 });
+
+test("Transaction DNA compares changed evidence and persists without extra RPC lookups", async ({
+  page,
+}) => {
+  await mockProStatus(page, {
+    status: "eligible",
+    message: "Verified",
+    address: address(9),
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const { base58 } = await import("@scure/base");
+  const fixture = JSON.parse(
+    await readFile("tests/fixtures/settle-tx.json", "utf8"),
+  );
+  fixture.result.transaction.message.accountKeys.push(
+    "11111111111111111111111111111111",
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    address(8),
+  );
+  const transfer = new Uint8Array(12);
+  new DataView(transfer.buffer).setUint32(0, 2, true);
+  new DataView(transfer.buffer).setBigUint64(4, 1000000000n, true);
+  const approval = new Uint8Array(9);
+  approval[0] = 4;
+  new DataView(approval.buffer).setBigUint64(1, 1000000n, true);
+  fixture.result.transaction.message.instructions = [
+    { programIdIndex: 5, accounts: [0, 1], data: base58.encode(transfer) },
+    { programIdIndex: 6, accounts: [1, 0, 0], data: base58.encode(approval) },
+  ];
+  let calls = 0;
+  await page.route("**/api/solana-rpc", async (route) => {
+    calls++;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(fixture),
+    });
+  });
+  await page.goto("./pro.html");
+  await page
+    .getByLabel("Solscan transaction link")
+    .fill(fixture.result.transaction.signatures[0]);
+  await page
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  await expect(page.getByTestId("transaction-dna")).toContainText("2 steps");
+  await page.getByRole("button", { name: "Save current reviews" }).click();
+  const comparison = page.getByTestId("dna-comparison");
+  await expect(comparison).toContainText("2 matching operations");
+  new DataView(transfer.buffer).setBigUint64(4, 2000000000n, true);
+  fixture.result.transaction.message.instructions[0].data =
+    base58.encode(transfer);
+  fixture.result.transaction.message.instructions[1].accounts = [1, 2, 0];
+  fixture.result.transaction.message.instructions.push({
+    programIdIndex: 7,
+    accounts: [0],
+    data: "3",
+  });
+  await page
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  await expect(comparison).toContainText("1 modified");
+  await expect(comparison).toContainText("2 added");
+  await expect(comparison).toContainText("1 removed");
+  await expect(comparison).toContainText(`Added reference: ${address(8)}`);
+  await expect(comparison).toContainText("Coverage incomplete");
+  const pending = page.waitForEvent("download");
+  await comparison
+    .getByRole("button", { name: "Export DNA comparison" })
+    .click();
+  const path = await (await pending).path();
+  if (!path) throw Error("Missing DNA export");
+  const exported = JSON.parse(await readFile(path, "utf8"));
+  expect(exported.differences.changed[0].before.amount).toBe("1000000000");
+  expect(exported.differences.changed[0].after.amount).toBe("2000000000");
+  expect(exported.differences.addedPrograms).toEqual([address(8)]);
+  expect(exported.differences.coverageIncomplete).toBe(true);
+  expect(calls).toBe(2);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await comparison.screenshot({
+    path: "../VoucherGuard-Transaction-DNA-Pro.png",
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await comparison.screenshot({
+    path: "../VoucherGuard-Transaction-DNA-mobile.png",
+  });
+  expect(
+    await comparison.evaluate((el) => el.scrollWidth <= el.clientWidth),
+  ).toBe(true);
+  await page.getByRole("button", { name: "Save current reviews" }).click();
+  await page.reload();
+  await expect(page.locator(".pro-saved-report")).toHaveCount(2);
+  await expect(comparison).toContainText("1 modified");
+  await comparison.getByLabel("DNA baseline").selectOption({ index: 1 });
+  await expect(comparison).toContainText("1 modified");
+  expect(calls).toBe(2);
+});

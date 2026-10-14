@@ -195,6 +195,13 @@ test("Free X-Ray loads once, plays recorded money and permissions, and keeps fai
       .getByRole("button", { name: "Export Wallet Impact" }),
   ).toHaveCount(0);
   await expect(xray).toContainText("SOL transfer instruction");
+  await expect(xray.getByTestId("transaction-dna")).toContainText(
+    "2 steps · 2 resolved programs",
+  );
+  await expect(xray.locator(".dna-hash")).toContainText(/SHA-256/);
+  await xray
+    .getByTestId("transaction-dna")
+    .screenshot({ path: "../VoucherGuard-Transaction-DNA-free.png" });
   const map = xray.getByTestId("permission-map");
   await expect(map).toContainText("1 mapped operation");
   await map

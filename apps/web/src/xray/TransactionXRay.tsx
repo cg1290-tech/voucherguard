@@ -4,6 +4,7 @@ import type { RuleReport } from "../pro/transaction-rules";
 import type { XRayModel } from "./model";
 import { PermissionMap } from "./PermissionMap";
 import { stepFlagged as flagged } from "./permission-map";
+import { TransactionDNAView } from "./TransactionDNA";
 import { WalletImpactView } from "./WalletImpact";
 import { focusAccounts, involvesAccount } from "./wallet-focus";
 import "./xray.css";
@@ -85,6 +86,7 @@ export function TransactionXRay({
     >
       <WalletImpactView model={model} rules={rules} />
       <PermissionMap model={model} rules={rules} />
+      <TransactionDNAView model={model} />
       <div className="xray-heading">
         <div>
           <p className="eyebrow">TRANSACTION X-RAY / HISTORICAL EVIDENCE</p>

@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Transaction DNA in Free: an ordered visual fingerprint of scoped historical X-Ray evidence, preserving exact quantities and undecoded instruction data.
+- Pro DNA comparison between loaded and locally saved reviews: added/removed program references and operations, changed amounts/execution states, ordering differences and JSON export. Existing saved evidence is reused without a storage migration or extra RPC requests.
+- Pro Rule Replay: editable Custom, Balanced and Strict preference comparisons on already loaded evidence, Permission Map highlights and local comparison export. Captured reports and saved preferences remain unchanged.
+
+### Scope
+
+- DNA is not raw transaction identity, a similarity-based safety score or a current permission check. Missing coverage remains explicit; edited local evidence is not authenticated by a fingerprint.
+
 ## [0.4.0] - 2026-10-14
 
 ### Added
