@@ -35,6 +35,8 @@ export function RulePreferences({
     }
   }
   const count =
+    Number(!!rules.maxSolDecrease) +
+    Number(rules.flagTokenDecreases) +
     Number(!!rules.maxFeeSol) +
     Number(rules.flagDelegations) +
     Number(rules.flagAuthorityChanges) +
@@ -51,6 +53,34 @@ export function RulePreferences({
           loaded; no extra RPC requests.
         </p>
         <fieldset disabled={busy}>
+          <p>
+            Wallet Impact guardrails apply to your authenticated wallet. Net
+            decreases can reflect transfers, swaps, fees or account operations;
+            they are not profit/loss.
+          </p>
+          <label htmlFor="rule-sol-decrease">
+            Maximum net SOL decrease (optional)
+          </label>
+          <input
+            id="rule-sol-decrease"
+            inputMode="decimal"
+            maxLength={22}
+            placeholder="e.g. 0.1"
+            value={draft.maxSolDecrease ?? ""}
+            onChange={(e) =>
+              setDraft({ ...draft, maxSolDecrease: e.target.value })
+            }
+          />
+          <label>
+            <input
+              type="checkbox"
+              checked={draft.flagTokenDecreases ?? false}
+              onChange={(e) =>
+                setDraft({ ...draft, flagTokenDecreases: e.target.checked })
+              }
+            />{" "}
+            Flag net token decreases in my wallet
+          </label>
           <label htmlFor="rule-max-fee">
             Maximum network fee / SOL (optional)
           </label>

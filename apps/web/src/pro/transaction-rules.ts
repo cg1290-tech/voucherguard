@@ -1,6 +1,9 @@
 import { base58 } from "@scure/base";
+import type { WalletImpact } from "../xray/wallet-impact";
 import { displayUnits, type TransactionInsights } from "./transaction-insights";
 export interface TransactionRules {
+  maxSolDecrease?: string;
+  flagTokenDecreases?: boolean;
   version: 1;
   maxFeeSol: string;
   flagDelegations: boolean;
@@ -20,6 +23,8 @@ export interface RuleReport {
 }
 export const DEFAULT_RULES: TransactionRules = {
   version: 1,
+  maxSolDecrease: "",
+  flagTokenDecreases: false,
   maxFeeSol: "",
   flagDelegations: true,
   flagAuthorityChanges: true,
@@ -50,6 +55,15 @@ export function validateRules(value: unknown): TransactionRules {
     r.allowedPrograms.length > 64
   )
     throw Error("Invalid transaction rules.");
+  if (
+    (r.maxSolDecrease !== undefined && typeof r.maxSolDecrease !== "string") ||
+    (r.flagTokenDecreases !== undefined &&
+      typeof r.flagTokenDecreases !== "boolean")
+  )
+    throw Error("Invalid Wallet Impact preferences.");
+  const maxSolDecrease =
+    typeof r.maxSolDecrease === "string" ? r.maxSolDecrease.trim() : "";
+  if (maxSolDecrease) feeLamports(maxSolDecrease);
   const maxFeeSol = r.maxFeeSol.trim();
   if (maxFeeSol) feeLamports(maxFeeSol);
   const allowedPrograms: string[] = [];
@@ -68,6 +82,8 @@ export function validateRules(value: unknown): TransactionRules {
   return {
     version: 1,
     maxFeeSol,
+    maxSolDecrease,
+    flagTokenDecreases: r.flagTokenDecreases === true,
     flagDelegations: r.flagDelegations as boolean,
     flagAuthorityChanges: r.flagAuthorityChanges as boolean,
     restrictPrograms: r.restrictPrograms as boolean,
@@ -107,9 +123,56 @@ export function saveRules(
 export function evaluateRules(
   insights: TransactionInsights,
   input: TransactionRules,
+  impact?: WalletImpact,
+  owner?: string,
 ): RuleReport {
   const rules = validateRules(input);
   const checks: RuleCheck[] = [];
+  const wallet = impact?.wallets.find((w) => w.address === owner);
+  const established = impact && impact.execution !== "unknown" && wallet;
+  if (rules.maxSolDecrease) {
+    const sol = established
+      ? wallet.balances.find((b) => b.asset === "SOL")
+      : undefined;
+    const decrease = sol
+      ? BigInt(sol.change) < 0n
+        ? -BigInt(sol.change)
+        : 0n
+      : undefined;
+    checks.push({
+      name: "Wallet SOL decrease",
+      status:
+        decrease === undefined
+          ? "incomplete"
+          : decrease > feeLamports(rules.maxSolDecrease)
+            ? "flagged"
+            : "within-rule",
+      explanation:
+        decrease === undefined
+          ? `Recorded SOL balance change unavailable for your authenticated wallet ${owner || "(unavailable)"}.`
+          : `Authenticated wallet ${owner}: net SOL decrease ${displayUnits(decrease.toString(), 9)}; limit ${rules.maxSolDecrease}. This includes fees, rent and account operations; it is not a spending or loss estimate.`,
+    });
+  }
+  if (rules.flagTokenDecreases) {
+    const decreases = established
+      ? wallet.balances.filter(
+          (b) => b.asset !== "SOL" && BigInt(b.change) < 0n,
+        )
+      : [];
+    checks.push({
+      name: "Wallet token decreases",
+      status: decreases.length
+        ? "flagged"
+        : !established || impact.gaps.length
+          ? "incomplete"
+          : "within-rule",
+      explanation: decreases.length
+        ? `Authenticated wallet ${owner}: recorded net token decreases: ${decreases.map((b) => `${displayUnits(b.change, b.decimals)} (${b.asset})`).join(", ")}. These are historical balance changes, not losses.${impact?.gaps.length ? " Other coverage is incomplete." : ""}`
+        : !established || impact.gaps.length
+          ? "Wallet ownership/balance coverage is incomplete; absence of a decrease cannot be established."
+          : `No net token decreases in the supplied snapshots for authenticated wallet ${owner}. This does not check current holdings.`,
+    });
+  }
   if (rules.maxFeeSol) {
     const cap = feeLamports(rules.maxFeeSol);
     const fee = insights.feeLamports;
