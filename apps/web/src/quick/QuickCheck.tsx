@@ -122,20 +122,20 @@ export function QuickCheck() {
     >
       <div className="section-heading">
         <div>
-          <p className="eyebrow">QUICK CHECK / FREE</p>
+          <p className="eyebrow">TRANSACTION WORKSPACE / FREE</p>
           <h2 id="quick-title">Paste a link. Press Play.</h2>
         </div>
         <span className="simulation">MAINNET READ-ONLY RPC</span>
       </div>
       <p className="quick-intro">
-        Transaction X-Ray plays decoded transfers and selected permissions from
-        the same transaction lookup. Unsupported instructions remain visible.
+        Explore Transaction X-Ray, compare Wallet Impact and inspect recognized
+        failure explanations from one transaction lookup. Unsupported
+        instructions and incomplete evidence stay visible.
       </p>
       <p className="quick-intro">
-        Paste a Solscan transaction URL or Solana signature. VoucherGuard reads
-        the confirmed transaction, extracts a Payment Channels V1 settlement
-        voucher when present, and verifies the detached Ed25519 evidence in your
-        browser. No wallet required.
+        Paste a Solscan URL or transaction signature. Start exploring without a
+        wallet. When a supported Payment Channels V1 settlement voucher is
+        present, its signed evidence is also verified in your browser.
       </p>
       <form className="quick-form" onSubmit={run}>
         <label className="sr-only" htmlFor="quick-input">

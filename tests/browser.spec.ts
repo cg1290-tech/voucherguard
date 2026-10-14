@@ -26,7 +26,7 @@ test("production site under a Pages subpath: scenarios, equivalent reports, offl
   await page.goto("./");
   await expect(
     page.getByRole("heading", {
-      name: "AI agents can spend money. Verify what they sign.",
+      name: "Your Solana Transaction Workspace.",
     }),
   ).toBeVisible();
   await context.setOffline(true);

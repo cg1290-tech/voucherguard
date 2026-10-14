@@ -100,8 +100,10 @@ export function Pro() {
     <section id="pro" className="pro-section" aria-labelledby="pro-title">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">VOUCHERGUARD PRO / HOLDER TOOLKIT</p>
-          <h2 id="pro-title">Your policies. Your guardrails.</h2>
+          <p className="eyebrow">
+            VOUCHERGUARD PRO / PERSONAL TRANSACTION RULES
+          </p>
+          <h2 id="pro-title">Your workspace. Your guardrails.</h2>
         </div>
         <span className="pro-network">
           {session.network === "robinhood"
@@ -110,9 +112,11 @@ export function Pro() {
         </span>
       </div>
       <p className="pro-intro">
-        Policy Builder is served only after the Pages Worker verifies on-chain
-        $VG holdings with a wallet signature. Quick Check and Advanced
-        Verification stay free and need no wallet.
+        Set your preferences once, then paste a Solscan link. Pro adds
+        transaction rules, Wallet Impact guardrails, personal token lists, saved
+        reports and evidence exports. On Solana, hold 5M $VG and sign an
+        authentication message to unlock. Free transaction exploration needs no
+        wallet.
       </p>
       <div className="pro-access">
         <div className="pro-access-copy">
@@ -297,10 +301,11 @@ export function Pro() {
         <div className="pro-tools">
           <article>
             <p className="small-label">HOLDER TOOL / SERVER GATED</p>
-            <h3>Policy Builder</h3>
+            <h3>Your personal review workspace</h3>
             <p>
-              Paste Solscan transaction links, review evidence and export
-              reports. Custom policies and file tools are optional.
+              Saved rules, Wallet Impact guardrails and personal token lists.
+              Review Solscan links, compare saved reports and export the
+              evidence. Custom voucher policies are available as optional tools.
             </p>
             <span className="pro-tool-label">
               Locked until the Worker verifies $VG holdings

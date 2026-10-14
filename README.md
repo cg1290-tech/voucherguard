@@ -1,6 +1,8 @@
 # VoucherGuard
 
-**Paste a Solscan link. Press Play. Look inside the transaction.**
+**Your Solana Transaction Workspace.**
+
+One Solscan link. Understand what changed, explore recorded instructions and find the reported failure point. Free exploration; personal rules and evidence exports with Pro.
 
 [Try Free X-Ray](https://voucherguard.pages.dev/#quick-check) · [Explore Pro](https://voucherguard.pages.dev/#pro) · [Release 0.3.0](https://github.com/cg1290-tech/voucherguard/releases/tag/v0.3.0) · [Source repository](https://github.com/cg1290-tech/voucherguard)
 

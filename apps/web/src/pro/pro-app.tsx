@@ -45,7 +45,7 @@ function ProTools() {
       <header className="pro-tools-header">
         <div>
           <p className="eyebrow">VOUCHERGUARD PRO</p>
-          <h1>Your verification workspace.</h1>
+          <h1>Your Solana Transaction Workspace.</h1>
           <p>Paste a Solscan link. Review the evidence. Export your results.</p>
           <p className="small muted">
             Holder session verified for{" "}
