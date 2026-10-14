@@ -567,6 +567,8 @@ test("transaction rules persist and use existing RPC evidence with immutable exp
   await page
     .getByLabel("Maximum network fee / SOL (optional)")
     .fill("0.000001");
+  await page.getByLabel("Maximum net SOL decrease (optional)").fill("0.05");
+  await page.getByLabel("Flag net token decreases in my wallet").check();
   await page
     .getByRole("button", { name: "Save transaction preferences" })
     .click();
@@ -600,6 +602,12 @@ test("transaction rules persist and use existing RPC evidence with immutable exp
   const path = await download.path();
   if (!path) throw Error("Missing export");
   const exported = JSON.parse(await readFile(path, "utf8"));
+  expect(exported.results[0].review.transactionRules.rules.maxSolDecrease).toBe(
+    "0.05",
+  );
+  expect(
+    exported.results[0].review.transactionRules.rules.flagTokenDecreases,
+  ).toBe(true);
   expect(exported.results[0].review.transactionRules.rules.maxFeeSol).toBe(
     "0.000001",
   );
@@ -608,6 +616,12 @@ test("transaction rules persist and use existing RPC evidence with immutable exp
   await expect(
     page.getByLabel("Maximum network fee / SOL (optional)"),
   ).toHaveValue("0.00001");
+  await expect(
+    page.getByLabel("Maximum net SOL decrease (optional)"),
+  ).toHaveValue("0.05");
+  await expect(
+    page.getByLabel("Flag net token decreases in my wallet"),
+  ).toBeChecked();
   await expect(page.getByLabel("Only allow my saved programs")).toBeChecked();
   expect(calls).toBe(1);
   await page.getByLabel("Solscan transaction link").fill(link);
@@ -615,7 +629,10 @@ test("transaction rules persist and use existing RPC evidence with immutable exp
     .getByRole("button", { name: "Play transaction", exact: true })
     .click();
   await expect(page.getByTestId("transaction-rule-results")).toContainText(
-    "Within your checked rules",
+    "Some rule checks are incomplete",
+  );
+  await expect(page.getByTestId("transaction-rule-results")).toContainText(
+    "authenticated wallet",
   );
   expect(calls).toBe(2);
   await page.screenshot({

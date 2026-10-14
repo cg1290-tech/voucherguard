@@ -192,3 +192,98 @@ describe("local transaction rules", () => {
     );
   });
 });
+
+describe("Wallet Impact guardrails", () => {
+  const owner = base58.encode(new Uint8Array(32).fill(9));
+  const impact = {
+    execution: "succeeded" as const,
+    gaps: [] as string[],
+    wallets: [
+      {
+        address: owner,
+        tokenAccounts: [],
+        balances: [
+          {
+            asset: "SOL",
+            decimals: 9,
+            before: "1000000000",
+            after: "900000000",
+            change: "-100000000",
+            accounts: [owner],
+          },
+          {
+            asset: token,
+            decimals: 6,
+            before: "2000000",
+            after: "1000000",
+            change: "-1000000",
+            accounts: [owner],
+          },
+        ],
+      },
+    ],
+  };
+  const prefs = {
+    ...DEFAULT_RULES,
+    flagDelegations: false,
+    flagAuthorityChanges: false,
+    maxSolDecrease: "0.05",
+    flagTokenDecreases: true,
+  };
+  it("flags exact net changes for the authenticated wallet and captures preferences", () => {
+    const r = evaluateRules(inspectTransaction(source), prefs, impact, owner);
+    expect(r.status).toBe("flagged");
+    expect(r.checks.map((c) => c.status)).toEqual(["flagged", "flagged"]);
+    expect(r.checks[0]?.explanation).toContain("includes fees, rent");
+    prefs.maxSolDecrease = "0.2";
+    expect(r.rules.maxSolDecrease).toBe("0.05");
+    expect(
+      evaluateRules(inspectTransaction(source), prefs, impact, owner).checks[0]
+        ?.status,
+    ).toBe("within-rule");
+    prefs.maxSolDecrease = "0.05";
+  });
+  it("does not pass missing wallet or unknown execution evidence", () => {
+    expect(
+      evaluateRules(inspectTransaction(source), prefs, impact, "different")
+        .status,
+    ).toBe("incomplete");
+    expect(
+      evaluateRules(
+        inspectTransaction(source),
+        prefs,
+        { ...impact, execution: "unknown" },
+        owner,
+      ).status,
+    ).toBe("incomplete");
+    const partial = {
+      ...impact,
+      gaps: ["missing records"],
+      wallets: [{ address: owner, tokenAccounts: [], balances: [] }],
+    };
+    expect(
+      evaluateRules(inspectTransaction(source), prefs, partial, owner).status,
+    ).toBe("incomplete");
+  });
+  it("retains positive findings with incomplete coverage and includes failed fees", () => {
+    const r = evaluateRules(
+      inspectTransaction(source),
+      prefs,
+      { ...impact, execution: "failed", gaps: ["missing records"] },
+      owner,
+    );
+    expect(r.status).toBe("flagged");
+    expect(r.checks[1]?.explanation).toContain("Other coverage is incomplete");
+  });
+  it("migrates old saved preferences and rejects invalid new fields", () => {
+    const old = { ...DEFAULT_RULES };
+    delete old.maxSolDecrease;
+    delete old.flagTokenDecreases;
+    expect(validateRules(old).maxSolDecrease).toBe("");
+    expect(validateRules(old).flagTokenDecreases).toBe(false);
+    expect(() => validateRules({ ...old, maxSolDecrease: "-1" })).toThrow();
+    expect(() =>
+      validateRules({ ...old, flagTokenDecreases: "true" }),
+    ).toThrow();
+  });
+});

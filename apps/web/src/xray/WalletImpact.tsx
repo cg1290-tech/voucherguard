@@ -147,8 +147,9 @@ export function WalletImpactView({
       {rules && (
         <div className="xray-rule-note">
           <p>
-            Pro transaction rules: {rules.status}. These captured checks apply
-            to the whole transaction, not only the selected wallet.
+            Pro transaction rules: {rules.status}. Captured checks include
+            transaction-wide rules and guardrails for the authenticated wallet.
+            Selecting an address does not change their scope.
           </p>
           {rules.checks.map((c) => (
             <p key={c.name}>

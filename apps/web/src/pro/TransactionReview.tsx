@@ -102,7 +102,12 @@ export function TransactionReview({
           captured,
           fetcher,
         );
-        review.transactionRules = evaluateRules(review.insights, capturedRules);
+        review.transactionRules = evaluateRules(
+          review.insights,
+          capturedRules,
+          review.xray?.walletImpact,
+          owner,
+        );
         next.push({ signature, review });
       } catch (e) {
         if (controller.signal.aborted) break;
