@@ -975,3 +975,39 @@ footer .brand {
 .official-token-actions a {
   color: #b5f878;
 }
+
+.workspace-benefits {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 3rem;
+}
+.workspace-benefits > a {
+  color: inherit;
+  text-decoration: none;
+  padding: 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0c1510;
+}
+.workspace-benefits h2 {
+  font-size: 1.5rem;
+  margin: 1rem 0;
+}
+.workspace-benefits p {
+  color: #b8c3bb;
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+.workspace-benefits > a:hover {
+  border-color: var(--green);
+}
+.workspace-benefits > a:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
+}
+@media (max-width: 760px) {
+  .workspace-benefits {
+    grid-template-columns: 1fr;
+  }
+}

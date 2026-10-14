@@ -153,7 +153,7 @@ function App() {
           </span>
         </a>
         <nav aria-label="Main">
-          <a href="#quick-check">Quick Check</a>
+          <a href="#quick-check">Workspace</a>
           <a href="#pro">Pro</a>
           <a href="#playground">Advanced</a>
           <a href="#documentation">Documentation</a>
@@ -168,32 +168,29 @@ function App() {
       <main id="top">
         <section className="hero">
           <div className="hero-copy">
-            <p className="eyebrow">SIGNED INTENT. INDEPENDENT VERIFICATION.</p>
+            <p className="eyebrow">YOUR SOLANA TRANSACTION WORKSPACE</p>
             <h1>
-              AI agents can
+              Your Solana
               <br />
-              spend money.
+              Transaction
               <br />
-              <span>
-                Verify what
-                <br className="mobile-break" /> they sign.
-              </span>
+              <span>Workspace.</span>
             </h1>
             <p className="lede">
-              Paste a Solscan transaction or import a signed voucher. Verify
-              Payment Channels evidence in your browser. A policy toolkit for
-              $VG holders on Solana.
+              One Solscan link. Understand what changed, explore recorded
+              instructions and find the reported failure point. Add your own
+              guardrails with Pro.
             </p>
             <div className="actions">
               <a className="primary" href="#quick-check">
-                Quick Check <span aria-hidden="true">↗</span>
+                Open workspace <span aria-hidden="true">↗</span>
               </a>
               <a className="secondary" href="#pro">
                 Explore Pro →
               </a>
             </div>
             <p className="hero-note">
-              Free Quick Check · Advanced voucher lab · No custody
+              Free exploration · No wallet required · No custody
               {repository && (
                 <a className="source-link" href={repository}>
                   Open source · MIT · GitHub ↗
@@ -211,62 +208,93 @@ function App() {
               width="112"
               height="112"
             />
-            <p className="eyebrow">ONE PROJECT. TWO TOOLKITS.</p>
+            <p className="eyebrow">ONE LINK. A CLEARER PICTURE.</p>
             <h2>
-              Verification first.
+              Know what changed.
               <br />
-              Your policies next.
+              Know why.
             </h2>
             <a className="product-card" href="#quick-check">
               <span className="small-label">FREE / AVAILABLE NOW</span>
               <strong>
-                Quick Check <span aria-hidden="true">↗</span>
+                Explore the transaction <span aria-hidden="true">↗</span>
               </strong>
               <p>
-                Paste a Solscan URL or signature to inspect on-chain settlement
-                voucher evidence.
+                X-Ray, Wallet Impact and explanations for recognized failures.
+                Start with a Solscan link; no wallet connection needed.
               </p>
             </a>
             <a className="product-card" href="#pro">
               <span className="small-label">
-                PRO / SERVER-GATED HOLDER ACCESS
+                PRO / VERIFIED $VG HOLDER ACCESS
               </span>
               <strong>
-                Policy Builder <span aria-hidden="true">↗</span>
+                Your rules. Your evidence. <span aria-hidden="true">↗</span>
               </strong>
               <p>
-                Paste Solscan links, review transaction evidence and export
-                reports after verifying your $VG holdings.
+                Saved transaction rules, wallet balance guardrails, personal
+                token lists and evidence exports. Hold 5M $VG on Solana and sign
+                a message to unlock.
               </p>
             </a>
             <p className="small muted">
-              Pro tools are served only with a Worker-issued holder session.
+              Playback and personal checks reuse the loaded transaction. No
+              extra RPC calls.
             </p>
             <OfficialToken />
           </aside>
+        </section>
+        <section
+          className="workspace-benefits"
+          aria-label="Explore your transaction"
+        >
+          <a href="#quick-check">
+            <span className="eyebrow">01 / TRANSACTION X-RAY</span>
+            <h2>Look inside.</h2>
+            <p>
+              Play recorded instructions. Inspect decoded transfers and selected
+              permission operations.
+            </p>
+          </a>
+          <a href="#quick-check">
+            <span className="eyebrow">02 / WALLET IMPACT</span>
+            <h2>See what changed.</h2>
+            <p>
+              Compare recorded balances before and after. Group token accounts
+              when historical ownership agrees.
+            </p>
+          </a>
+          <a href="#quick-check">
+            <span className="eyebrow">03 / FAILURE DECODER</span>
+            <h2>Find where it failed.</h2>
+            <p>
+              Locate the reported instruction, understand recognized errors and
+              inspect the recorded fee.
+            </p>
+          </a>
         </section>
         <QuickCheck />
         <Pro />
         <section className="intro" id="scope">
           <h2>
-            A signature proves intent.
+            Evidence you can inspect.
             <br />
-            Context determines acceptance.
+            Boundaries you can see.
           </h2>
           <div>
             <p>
-              VoucherGuard checks exact signed bytes, independently supplied
-              signer and channel, expiration, amount caps and trusted
-              watermarks. One TypeScript engine runs in your application,
-              terminal and browser.
+              The workspace explains supported historical Solana transaction
+              evidence. Unknown instructions, incomplete ownership records and
+              unrecognized errors stay explicit. Pro compares that evidence with
+              your saved preferences; it does not block or execute transactions.
             </p>
             <p className="muted">
-              Supports Solana Foundation payment channel V1 vouchers. This is
-              not a complete x402 verifier. Quick Check reads confirmed
-              transactions through a public RPC relay; Advanced Verification
-              runs offline on imported documents. Hosted Pro requires a
-              Worker-verified $VG holder session before Policy Builder is
-              served. Nothing here executes payments or takes custody.
+              Transaction lookups and holder verification use read-only RPC.
+              Playback, Wallet Impact and personal checks add no RPC calls. The
+              Advanced Verification lab independently checks Solana payment
+              channel V1 vouchers offline. This is not a complete x402 verifier,
+              a program audit or a guarantee of current permissions or future
+              safety. Nothing here executes payments or takes custody.
             </p>
           </div>
         </section>
@@ -281,7 +309,7 @@ function App() {
           <p className="quick-intro">
             Import or edit a signed voucher document, adjust policy and trusted
             state, then run the full offline verifier. Prefer{" "}
-            <a href="#quick-check">Quick Check</a> when you already have a
+            <a href="#quick-check">Workspace</a> when you already have a
             settlement transaction.
           </p>
           <div className="lab-layout">
@@ -589,10 +617,12 @@ pnpm check`}</pre>
               submissions.
             </p>
             <p>
-              <strong>Channel vouchers only.</strong> No x402 envelope,
-              transaction, recipient distribution, balance or program deployment
-              verification. State checks model ordinary settlement on an Open
-              channel.
+              <strong>Separate verification scopes.</strong> The offline
+              verifier checks payment-channel V1 vouchers and supplied state,
+              not complete x402 envelopes or program deployments. Workspace
+              views inspect selected historical transaction effects, not all
+              program behavior, current balances, token reputation or future
+              safety.
             </p>
             <p>
               <strong>No independent audit.</strong> This software has not been
@@ -610,7 +640,7 @@ pnpm check`}</pre>
         <span className="brand">
           Voucher<span>Guard</span>
         </span>
-        <span>Verify what your AI agents sign.</span>
+        <span>Your Solana Transaction Workspace.</span>
         <a href="https://x.com/VoucherGuard" target="_blank" rel="noreferrer">
           Official X · @VoucherGuard ↗
         </a>
