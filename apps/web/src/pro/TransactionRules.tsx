@@ -220,13 +220,21 @@ export function RulePreferences({
     </>
   );
 }
-export function RuleResults({ report }: { report: RuleReport }) {
+export function RuleResults({
+  report,
+  replay = false,
+}: {
+  report: RuleReport;
+  replay?: boolean;
+}) {
   return (
     <section
       className="pro-rule-results"
-      data-testid="transaction-rule-results"
+      data-testid={replay ? "replay-rule-results" : "transaction-rule-results"}
     >
-      <p className="eyebrow">YOUR TRANSACTION RULES</p>
+      <p className="eyebrow">
+        {replay ? "TEMPORARY REPLAY RULES" : "YOUR TRANSACTION RULES"}
+      </p>
       <h3>
         {report.status === "flagged"
           ? "Your rules flagged this transaction"

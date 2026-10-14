@@ -18,6 +18,7 @@ AI agents can authorize spending. A valid signature alone does not establish tha
 
 | Capability | Free | Pro |
 | --- | --- | --- |
+| Rule Replay: compare editable Custom, Balanced and Strict profiles on loaded evidence | — | Yes, with comparison export |
 | Permission Map of selected recorded account operations | Yes | Captured delegation, authority and program-list alerts |
 | One-link X-Ray with Money/Permissions lenses | Yes, no wallet required | Yes |
 | Wallet Impact: recorded SOL and grouped token before/after | Yes | Yes, with captured rules and JSON export |
