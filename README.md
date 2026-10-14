@@ -19,6 +19,7 @@ AI agents can authorize spending. A valid signature alone does not establish tha
 | Capability | Free | Pro |
 | --- | --- | --- |
 | Rule Replay: compare editable Custom, Balanced and Strict profiles on loaded evidence | — | Yes, with comparison export |
+| Transaction DNA: visual ordered operation fingerprint | Yes | Compare loaded and locally saved reviews; exact differences and JSON export |
 | Permission Map of selected recorded account operations | Yes | Captured delegation, authority and program-list alerts |
 | One-link X-Ray with Money/Permissions lenses | Yes, no wallet required | Yes |
 | Wallet Impact: recorded SOL and grouped token before/after | Yes | Yes, with captured rules and JSON export |
@@ -33,6 +34,8 @@ AI agents can authorize spending. A valid signature alone does not establish tha
 Wallet Impact groups token accounts only when recorded ownership, mint and precision agree before and after. Missing or conflicting records are excluded explicitly. Fee-payer SOL changes already include the fee; totals are historical snapshots, not profit/loss or current holdings.
 
 Permission Map connects account addresses and selected recorded permission operations. Repeated grants, revocations and authority changes remain separate; it does not infer currently active permissions. Display is limited to 24 connections and 16 nodes, with omissions disclosed.
+
+Transaction DNA visualizes the ordered X-Ray evidence as a transfer/permission/undecoded sequence. Its versioned SHA-256 fingerprint covers scoped operations, exact amounts, permission targets, resolved program references, execution states and coverage notes; it is not a hash of the raw transaction and excludes signatures, fees and final balances. Matching DNA does not certify identity or safety. Pro compares loaded or locally saved reviews without refetching: added/removed programs and operations, changed amounts/states, and ordering differences. Duplicate operations are counted individually; changed targets appear as removed/added operations. Opaque instructions retain raw data and account references. Missing traces remain explicit, and older or malformed saved evidence is skipped without inference. DNA exports stay local; local reports are editable, not authenticated evidence.
 
 Failed transactions show recognized runtime errors in plain English and the top-level instruction identified by the recorded error. Custom program codes remain uninterpreted; bounded program logs are diagnostic text, not verified explanations. Pro rule alerts are separate from failure causes. Pro also offers saved Wallet Impact guardrails for the authenticated wallet: a maximum net SOL decrease and net token decrease alerts. These use historical balances, include fees/rent in SOL changes, and do not estimate spending or losses. Missing wallet evidence remains incomplete. A personal allowed-token list flags nonzero historical token balance changes outside saved mint addresses. You can fill the draft from documented token ownership in current reviews, then save. List mismatches are not scam or safety verdicts.
 

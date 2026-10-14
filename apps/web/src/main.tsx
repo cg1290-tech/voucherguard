@@ -220,8 +220,9 @@ function App() {
                 Explore the transaction <span aria-hidden="true">↗</span>
               </strong>
               <p>
-                X-Ray, Wallet Impact and explanations for recognized failures.
-                Start with a Solscan link; no wallet connection needed.
+                X-Ray, Transaction DNA, Wallet Impact and explanations for
+                recognized failures. Start with a Solscan link; no wallet
+                connection needed.
               </p>
             </a>
             <a className="product-card" href="#pro">
@@ -233,8 +234,8 @@ function App() {
               </strong>
               <p>
                 Saved transaction rules, wallet balance guardrails, personal
-                token lists and evidence exports. Hold 5M $VG on Solana and sign
-                a message to unlock.
+                token lists, Rule Replay, DNA comparisons and evidence exports.
+                Hold 5M $VG on Solana and sign a message to unlock.
               </p>
             </a>
             <p className="small muted">
