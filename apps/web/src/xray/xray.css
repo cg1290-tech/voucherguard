@@ -265,3 +265,40 @@
 .xray-stage.xray-failed-step {
   border: 2px solid #f6d178;
 }
+
+.xray-impact {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border: 1px solid #52654b;
+  border-radius: 12px;
+  background: #101d14;
+}
+.xray-impact label {
+  display: block;
+  margin: 1rem 0 0.5rem;
+}
+.xray-impact select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  background: #090d0c;
+  color: #e9eee9;
+  border: 1px solid #52654b;
+  padding: 0.7rem;
+  border-radius: 8px;
+}
+.xray-impact-balances {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.xray-impact-card {
+  padding: 1rem;
+  border: 1px solid #52654b;
+  border-radius: 10px;
+  background: #090d0c;
+}
+.xray-impact-card > strong {
+  color: #b5f878;
+}

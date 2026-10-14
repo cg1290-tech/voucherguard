@@ -186,6 +186,14 @@ test("Free X-Ray loads once, plays recorded money and permissions, and keeps fai
     .click();
   const xray = page.getByTestId("transaction-xray");
   await expect(xray).toBeVisible();
+  await expect(xray.getByTestId("wallet-impact")).toContainText(
+    "What actually changed?",
+  );
+  await expect(
+    xray
+      .getByTestId("wallet-impact")
+      .getByRole("button", { name: "Export Wallet Impact" }),
+  ).toHaveCount(0);
   await expect(xray).toContainText("SOL transfer instruction");
   await xray
     .getByRole("button", { name: "Inspect current instruction" })

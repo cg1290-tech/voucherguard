@@ -669,6 +669,21 @@ test("Pro X-Ray flags saved personal rules without another transaction lookup", 
     .click();
   const xray = page.getByTestId("transaction-xray");
   await expect(xray).toContainText("Pro preferences");
+  const impact = xray.getByTestId("wallet-impact");
+  await expect(impact).toContainText("Pro transaction rules:");
+  const impactDownload = page.waitForEvent("download");
+  await impact.getByRole("button", { name: "Export Wallet Impact" }).click();
+  const impactPath = await (await impactDownload).path();
+  if (!impactPath) throw Error("Missing Wallet Impact export");
+  const exportedImpact = JSON.parse(await readFile(impactPath, "utf8"));
+  expect(exportedImpact.wallet.address).toBe(
+    fixture.result.transaction.message.accountKeys[0],
+  );
+  expect(exportedImpact.transactionRules).toBeDefined();
+  expect(exportedImpact.signature).toBe(
+    fixture.result.transaction.signatures[0],
+  );
+  expect(calls).toBe(1);
   await xray
     .getByRole("button", {
       name: "2 · Spending delegation · Flagged",
