@@ -18,6 +18,7 @@ AI agents can authorize spending. A valid signature alone does not establish tha
 
 | Capability | Free | Pro |
 | --- | --- | --- |
+| Permission Map of selected recorded account operations | Yes | Captured delegation, authority and program-list alerts |
 | One-link X-Ray with Money/Permissions lenses | Yes, no wallet required | Yes |
 | Wallet Impact: recorded SOL and grouped token before/after | Yes | Yes, with captured rules and JSON export |
 | Failure explanation, recorded fee and top-level failure point | Yes | Yes |
@@ -29,6 +30,8 @@ AI agents can authorize spending. A valid signature alone does not establish tha
 | Custom voucher policies and voucher-file batches | Advanced manual verification | Policy Builder and up to 100 voucher files |
 
 Wallet Impact groups token accounts only when recorded ownership, mint and precision agree before and after. Missing or conflicting records are excluded explicitly. Fee-payer SOL changes already include the fee; totals are historical snapshots, not profit/loss or current holdings.
+
+Permission Map connects account addresses and selected recorded permission operations. Repeated grants, revocations and authority changes remain separate; it does not infer currently active permissions. Display is limited to 24 connections and 16 nodes, with omissions disclosed.
 
 Failed transactions show recognized runtime errors in plain English and the top-level instruction identified by the recorded error. Custom program codes remain uninterpreted; bounded program logs are diagnostic text, not verified explanations. Pro rule alerts are separate from failure causes. Pro also offers saved Wallet Impact guardrails for the authenticated wallet: a maximum net SOL decrease and net token decrease alerts. These use historical balances, include fees/rent in SOL changes, and do not estimate spending or losses. Missing wallet evidence remains incomplete. A personal allowed-token list flags nonzero historical token balance changes outside saved mint addresses. You can fill the draft from documented token ownership in current reviews, then save. List mismatches are not scam or safety verdicts.
 

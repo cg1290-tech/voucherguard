@@ -1,25 +1,15 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { displayUnits } from "../pro/transaction-insights";
 import type { RuleReport } from "../pro/transaction-rules";
-import type { XRayModel, XRayStep } from "./model";
+import type { XRayModel } from "./model";
+import { PermissionMap } from "./PermissionMap";
+import { stepFlagged as flagged } from "./permission-map";
 import { WalletImpactView } from "./WalletImpact";
 import { focusAccounts, involvesAccount } from "./wallet-focus";
 import "./xray.css";
 
 const short = (s: string) =>
   s.length > 16 ? `${s.slice(0, 7)}…${s.slice(-5)}` : s;
-function flagged(step: XRayStep, report?: RuleReport): boolean {
-  if (!report) return false;
-  return (
-    (report.rules.restrictPrograms &&
-      !!step.program &&
-      !report.rules.allowedPrograms.includes(step.program)) ||
-    (report.rules.flagDelegations &&
-      step.permissionAction === "Spending delegation") ||
-    (report.rules.flagAuthorityChanges &&
-      step.permissionAction === "Authority change")
-  );
-}
 export function TransactionXRay({
   model,
   rules,
@@ -94,6 +84,7 @@ export function TransactionXRay({
       aria-label="Transaction X-Ray"
     >
       <WalletImpactView model={model} rules={rules} />
+      <PermissionMap model={model} rules={rules} />
       <div className="xray-heading">
         <div>
           <p className="eyebrow">TRANSACTION X-RAY / HISTORICAL EVIDENCE</p>

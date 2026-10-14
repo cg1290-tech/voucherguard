@@ -113,6 +113,8 @@ describe("Transaction X-Ray", () => {
     expect(m.steps[0]?.instructionData).toBeDefined();
     expect(m.steps[0]?.accountAddresses).toEqual([key(1), key(2)]);
     expect(m.steps[1]?.to).toBe(key(2));
+    expect(m.steps[1]?.amount).toBe("1000000");
+    expect(m.steps[1]?.decimals).toBeUndefined();
   });
   it("decodes exact u64 token amounts and loaded addresses without inferring unknown mint precision", () => {
     const t = tx();

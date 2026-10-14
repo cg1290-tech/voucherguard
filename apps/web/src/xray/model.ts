@@ -246,6 +246,11 @@ export function buildXRay(
         if (op === 4 || op === 13) {
           const target = accounts[op === 13 ? 2 : 1];
           if (target) step.to = target;
+          step.amount = u64(1);
+          if (op === 13) {
+            if (data[9] !== undefined) step.decimals = data[9];
+            if (accounts[1]) step.asset = accounts[1];
+          }
         } else if (op === 6 && data[2] === 1)
           step.to = base58.encode(data.slice(3, 35));
         else if (op === 9 && accounts[1]) step.to = accounts[1];

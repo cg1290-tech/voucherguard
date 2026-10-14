@@ -195,6 +195,21 @@ test("Free X-Ray loads once, plays recorded money and permissions, and keeps fai
       .getByRole("button", { name: "Export Wallet Impact" }),
   ).toHaveCount(0);
   await expect(xray).toContainText("SOL transfer instruction");
+  const map = xray.getByTestId("permission-map");
+  await expect(map).toContainText("1 mapped operation");
+  await map
+    .getByRole("button", { name: /Instruction 2 · Spending delegation/ })
+    .click();
+  await expect(
+    map.getByRole("region", { name: "Selected permission connection" }),
+  ).toContainText("1000000 base units");
+  await map.screenshot({ path: "../VoucherGuard-PermissionMap-free.png" });
+  await map
+    .getByRole("button", { name: /Account/ })
+    .first()
+    .click();
+  await expect(map).toContainText("Selected account");
+  expect(calls).toBe(1);
   await xray
     .getByRole("button", { name: "Inspect current instruction" })
     .click();
