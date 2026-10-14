@@ -252,8 +252,8 @@ function App() {
             <span className="eyebrow">01 / TRANSACTION X-RAY</span>
             <h2>Look inside.</h2>
             <p>
-              Play recorded instructions. Inspect decoded transfers and selected
-              permission operations.
+              Play recorded instructions. Explore Permission Map, decoded
+              transfers and selected permission operations.
             </p>
           </a>
           <a href="#quick-check">

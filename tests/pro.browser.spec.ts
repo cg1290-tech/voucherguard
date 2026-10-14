@@ -686,6 +686,19 @@ test("Pro X-Ray flags saved personal rules without another transaction lookup", 
     .click();
   const xray = page.getByTestId("transaction-xray");
   await expect(xray).toContainText("Pro preferences");
+  const permissionMap = xray.getByTestId("permission-map");
+  await permissionMap
+    .getByRole("button", {
+      name: /Spending delegation · recorded · Pro rule flagged/,
+    })
+    .click();
+  await expect(
+    permissionMap.getByRole("region", {
+      name: "Selected permission connection",
+    }),
+  ).toContainText("matches captured Pro");
+  await expect(permissionMap.locator(".map-rule-flag")).toHaveCount(1);
+  expect(calls).toBe(1);
   const impact = xray.getByTestId("wallet-impact");
   await expect(impact).toContainText("Pro transaction rules:");
   const impactDownload = page.waitForEvent("download");

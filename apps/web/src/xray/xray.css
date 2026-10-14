@@ -302,3 +302,96 @@
 .xray-impact-card > strong {
   color: #b5f878;
 }
+
+.permission-map {
+  border: 1px solid #52654b;
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 1rem 0 2rem;
+  background: #0b1410;
+}
+.permission-map-scroll {
+  overflow-x: auto;
+  border: 1px solid #344337;
+  border-radius: 10px;
+}
+.permission-map-canvas {
+  position: relative;
+  min-width: 640px;
+  aspect-ratio: 800 / 540;
+}
+.permission-map-canvas svg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+.permission-map-canvas path {
+  fill: none;
+  stroke: #7fb58c;
+  stroke-width: 2;
+}
+.permission-map-canvas circle {
+  fill: #7fb58c;
+}
+.permission-map-canvas .map-attempt path {
+  stroke-dasharray: 6 6;
+}
+.permission-map-canvas .map-rule-flag path,
+.permission-map-canvas .map-active path {
+  stroke: #f6d178;
+  stroke-width: 4;
+}
+.xray .permission-map-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  gap: 0.3rem;
+  padding: 0.6rem;
+  max-width: 120px;
+  background: #101d14;
+}
+.xray .permission-map-node.map-operation {
+  border-style: dashed;
+}
+.xray .permission-map-node[aria-pressed="true"] {
+  outline: 2px solid #b5f878;
+}
+.permission-map-links {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+.permission-map-detail {
+  border-top: 1px solid #52654b;
+  padding: 1rem 0;
+}
+.permission-map-detail code {
+  overflow-wrap: anywhere;
+}
+.permission-map-canvas path.permission-map-arrow {
+  fill: #b5f878;
+  stroke: none;
+}
+.permission-map-canvas {
+  max-width: 800px;
+  margin: 0 auto;
+}
+.xray .permission-map-node {
+  width: 100px;
+}
+.permission-map-canvas .map-removal path {
+  stroke-dasharray: 3 5;
+}
+.permission-map-canvas .map-removal:not(.map-rule-flag):not(.map-active) path {
+  stroke: #a0aca7;
+}
+.permission-map-canvas.map-simple {
+  aspect-ratio: 800 / 260;
+}
+.permission-map-node strong {
+  white-space: nowrap;
+  font-size: 0.7rem;
+}
