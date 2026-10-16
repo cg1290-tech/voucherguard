@@ -1,5 +1,6 @@
 import { base58 } from "@scure/base";
 import { type NativeSolEvidence, nativeSolFlow } from "./native-sol";
+import { type LifecycleWallet, lifecycleForOwner } from "./token-lifecycle";
 export const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 export const WSOL = "So11111111111111111111111111111111111111112";
 export interface ReceiptLeg {
@@ -20,6 +21,7 @@ export interface TradeReceipt {
   feePayer: string;
   balances: ReceiptLeg[];
   notes: string[];
+  lifecycle?: LifecycleWallet;
   nativeSol?: {
     observedNetLamports: string;
     transferNetLamports: string;
@@ -56,7 +58,12 @@ export function buildTradeReceipt(
   owner: string,
 ): TradeReceipt | undefined {
   const model = obj(value),
-    impact = obj(model.walletImpact);
+    lifecycle = lifecycleForOwner(
+      model.tokenLifecycle,
+      owner,
+      model.walletImpact,
+    ),
+    impact = obj(lifecycle?.impact ?? model.walletImpact);
   if (
     !address(owner) ||
     !Array.isArray(impact.wallets) ||
@@ -110,6 +117,18 @@ export function buildTradeReceipt(
       ? impact.execution
       : "unknown";
   const notes = [...impact.gaps] as string[];
+  const lifecycleEvidence = obj(model.tokenLifecycle),
+    nativeEvidence = obj(model.nativeSol);
+  if (
+    !lifecycle &&
+    lifecycleEvidence.version === 1 &&
+    lifecycleEvidence.complete === false &&
+    Array.isArray(nativeEvidence.blockedAccounts) &&
+    nativeEvidence.blockedAccounts.includes(owner)
+  )
+    notes.push(
+      "Affected account lifecycle could not be proven; journal cost basis withheld.",
+    );
   const receipt: TradeReceipt = {
     signature: typeof impact.signature === "string" ? impact.signature : "",
     owner,
@@ -126,6 +145,7 @@ export function buildTradeReceipt(
     feePayer: typeof impact.feePayer === "string" ? impact.feePayer : "",
     balances,
     notes,
+    ...(lifecycle ? { lifecycle: lifecycle.proof } : {}),
   };
   try {
     if (
@@ -139,7 +159,10 @@ export function buildTradeReceipt(
   if (model.execution !== impact.execution)
     notes.push("Execution evidence is inconsistent.");
   const tokens = balances.filter(
-    (b) => b.asset !== "SOL" && BigInt(b.change) !== 0n,
+    (b) =>
+      b.asset !== "SOL" &&
+      (!lifecycle || b.asset !== WSOL) &&
+      BigInt(b.change) !== 0n,
   );
   const quotes = tokens.filter(
     (b) =>
@@ -175,11 +198,15 @@ export function buildTradeReceipt(
     receipt.feeLamports !== null &&
     receipt.feePayer === owner
   ) {
-    const flow = nativeSolFlow(model.nativeSol, owner),
+    const flow = lifecycle
+        ? { net: lifecycle.proof.cashNetLamports, reasons: [], transfers: [] }
+        : nativeSolFlow(model.nativeSol, owner),
       token = tokens[0];
     if (flow.net === null) notes.push(...flow.reasons);
     else if (
-      BigInt(sol.change) + BigInt(receipt.feeLamports) !==
+      BigInt(sol.change) +
+        BigInt(lifecycle?.proof.accountDeltaLamports ?? "0") +
+        BigInt(receipt.feeLamports) !==
       BigInt(flow.net)
     )
       notes.push(
@@ -211,14 +238,16 @@ export function buildTradeReceipt(
   }
   if (!receipt.candidate)
     notes.push(
-      "No supported simple trade established. Native SOL needs complete transfer evidence, exact balance/fee reconciliation and no affected account lifecycle operations.",
+      "No supported simple trade established. Native SOL needs complete transfer evidence, exact balance/fee reconciliation and either no lifecycle effects or a fully reconciled classic Token lifecycle.",
     );
   if (
     receipt.feeLamports === null ||
     receipt.feePayer !== owner ||
     !sol ||
     (receipt.candidate?.quoteSymbol !== "SOL" &&
-      BigInt(sol.change) !== -BigInt(receipt.feeLamports))
+      BigInt(sol.change) +
+        BigInt(lifecycle?.proof.accountDeltaLamports ?? "0") !==
+        -BigInt(receipt.feeLamports))
   )
     notes.push(
       "Network fee ownership or other native SOL effects are not isolated; journal cost basis withheld.",

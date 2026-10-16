@@ -107,9 +107,9 @@ export function TradeJournal({
       {!journal.positions.length && unique.length > 0 && (
         <p>
           No supported token ↔ SOL/USDC/persistent WSOL position found.
-          Unreconciled native SOL flows, newly created/closed token accounts,
-          mixed quote currencies and ambiguous flows do not receive an invented
-          cost basis.
+          Unreconciled native SOL flows, unproven token-account lifecycle, mixed
+          quote currencies and ambiguous flows do not receive an invented cost
+          basis.
         </p>
       )}
       {journal.positions.map((p) => (
@@ -163,7 +163,7 @@ export function TradeJournal({
             {p.status !== "calculated"
               ? "Cost allocation is withheld."
               : p.costsIncludeNetworkFees
-                ? "Successful-trade network fees are allocated once to FIFO costs/proceeds in SOL units. Native transfer cash flows exclude the network fee; other recorded payments such as tips stay in the trade cash flow."
+                ? "Successful-trade network fees are allocated once to FIFO costs/proceeds in SOL units. Native/consolidated cash flows exclude the network fee and internal account-capital movements; recorded external payments such as tips stay in trade cash flow."
                 : "USDC result excludes SOL fees: no historical exchange rate is available, so no conversion is invented."}
           </p>
           {p.reasons.map((r) => (
@@ -218,9 +218,10 @@ export function TradeJournal({
           positions. Partial FIFO lot costs round down to one quote base unit;
           the remainder stays with the lot and is consumed on final sale.
           Opening holdings, missing quantity continuity, unknown ordering,
-          multiple trades in one slot, changed quote currencies and incomplete
-          fee evidence withhold the result. Local evidence is unencrypted and
-          editable; it is not independently certified.
+          multiple trades in one slot, changed quote currencies, unsupported
+          Token-2022 lifecycle/extensions and incomplete fee evidence withhold
+          the result. Local evidence is unencrypted and editable; it is not
+          independently certified.
         </p>
       </details>
     </section>

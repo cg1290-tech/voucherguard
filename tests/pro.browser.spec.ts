@@ -1228,3 +1228,105 @@ test("native SOL Journal reconciles cash and fees once, exports locally and with
   await expect(blocked).toContainText("rent/principal is not isolated");
   expect(calls).toBe(4);
 });
+
+test("wrapped SOL lifecycle proves zero boundaries, excludes account capital and keeps exports local", async ({
+  page,
+}) => {
+  const {
+    lifecycleOwner: owner,
+    lifecycleTransaction,
+    tokenDeposit,
+    temporaryFunding,
+    lifecycleMint,
+  } = await import("./lifecycle-fixtures");
+  await mockProStatus(page, {
+    status: "eligible",
+    message: "Verified",
+    address: owner,
+  });
+  const buy = lifecycleTransaction(),
+    sell = lifecycleTransaction(true),
+    signatures = [
+      buy.transaction.signatures[0],
+      sell.transaction.signatures[0],
+    ];
+  let calls = 0;
+  await page.route("**/api/solana-rpc", async (route) => {
+    calls++;
+    const signature = route.request().postDataJSON().params[0];
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        result: signature === signatures[0] ? buy : sell,
+      }),
+    });
+  });
+  await page.goto("./pro.html");
+  await page.getByLabel("Solscan transaction link").fill(signatures.join("\n"));
+  await page
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  const journal = page.getByTestId("trade-journal");
+  await expect(journal).toContainText("Profit withheld");
+  await journal.getByRole("checkbox", { name: /I confirm/ }).check();
+  await expect(journal).toContainText(
+    "Realized result including successful-trade network fees: 0.19999 SOL",
+  );
+  const receipt = page.getByTestId("trade-receipt").first();
+  await receipt
+    .getByText("Proven account lifecycle & capital movements")
+    .click();
+  await expect(receipt).toContainText(
+    "zero proven by creation + initialization",
+  );
+  await expect(receipt).toContainText(
+    "Refunds can contain both wrapped principal",
+  );
+  await receipt.screenshot({ path: "../VoucherGuard-Wrapped-SOL-Receipt.png" });
+  const pending = page.waitForEvent("download");
+  await journal
+    .getByRole("button", { name: "Export Trade Journal evidence" })
+    .click();
+  const path = await (await pending).path();
+  if (!path) throw Error("Missing lifecycle export");
+  const exported = JSON.parse(await readFile(path, "utf8"));
+  expect(exported.journal.positions[0].realizedResult).toBe("199990000");
+  expect(exported.journal.receipts[0].lifecycle.accountDeltaLamports).toBe(
+    tokenDeposit.toString(),
+  );
+  expect(exported.journal.receipts[0].lifecycle.fundingLamports).toBe(
+    (tokenDeposit + temporaryFunding).toString(),
+  );
+  expect(
+    exported.journal.receipts[0].lifecycle.accounts.find(
+      (a: { mint: string }) => a.mint === lifecycleMint,
+    ).zeroBeforeProven,
+  ).toBe(true);
+  expect(exported.journal.receipts[1].lifecycle.refundLamports).toBe(
+    (temporaryFunding + 1200000000n + tokenDeposit).toString(),
+  );
+  const csvPending = page.waitForEvent("download");
+  await journal
+    .getByRole("button", { name: "Export Trade Journal CSV" })
+    .click();
+  const csv = await (await csvPending).path();
+  if (!csv) throw Error("Missing CSV");
+  expect(await readFile(csv, "utf8")).toContain('"0.19999"');
+  expect(calls).toBe(2);
+  await page.getByRole("button", { name: "Save current reviews" }).click();
+  await page.reload();
+  await expect(journal).toContainText("Profit withheld");
+  await journal.getByRole("checkbox", { name: /I confirm/ }).check();
+  await expect(journal).toContainText("0.19999 SOL");
+  expect(calls).toBe(2);
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await journal.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+    true,
+  );
+  await journal.screenshot({
+    path: "../VoucherGuard-Wrapped-SOL-Journal-mobile.png",
+  });
+});
