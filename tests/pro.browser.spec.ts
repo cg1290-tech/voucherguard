@@ -1079,3 +1079,152 @@ test("Trade Journal preserves conditional FIFO, export and local history without
   await expect(journal).toContainText("Profit withheld");
   expect(calls).toBe(2);
 });
+
+test("native SOL Journal reconciles cash and fees once, exports locally and withholds rent ambiguity", async ({
+  page,
+}) => {
+  const owner = address(9),
+    mint = address(8);
+  await mockProStatus(page, {
+    status: "eligible",
+    message: "Verified",
+    address: owner,
+  });
+  const { base58 } = await import("@scure/base");
+  const signatures = [40, 41].map((n) =>
+    base58.encode(new Uint8Array(64).fill(n)),
+  );
+  const transfer = (from: number, to: number, lamports: bigint) => {
+    const b = new Uint8Array(12);
+    new DataView(b.buffer).setUint32(0, 2, true);
+    new DataView(b.buffer).setBigUint64(4, lamports, true);
+    return { programIdIndex: 5, accounts: [from, to], data: base58.encode(b) };
+  };
+  let calls = 0,
+    ambiguous = false;
+  await page.route("**/api/solana-rpc", async (route) => {
+    calls++;
+    const sig = route.request().postDataJSON().params[0],
+      sell = sig === signatures[1];
+    const amount = sell ? 1200000000n : -1000000000n;
+    const balance = (amount: string) => ({
+      accountIndex: 2,
+      mint,
+      owner,
+      uiTokenAmount: { amount, decimals: 6 },
+    });
+    const tokenTransfer = new Uint8Array(9);
+    tokenTransfer[0] = 3;
+    new DataView(tokenTransfer.buffer).setBigUint64(1, 100000000n, true);
+    const instructions = [
+      transfer(sell ? 1 : 0, sell ? 0 : 1, sell ? amount : -amount),
+      {
+        programIdIndex: 6,
+        accounts: sell ? [2, 3, 0] : [3, 2, 1],
+        data: base58.encode(tokenTransfer),
+      },
+    ];
+    if (ambiguous && sell)
+      instructions.push({
+        programIdIndex: 6,
+        accounts: [2, 0, 0],
+        data: base58.encode(new Uint8Array([9])),
+      });
+    const tx = {
+      slot: sell ? 101 : 100,
+      blockTime: 1792000000 + (sell ? 1 : 0),
+      transaction: {
+        signatures: [sig],
+        message: {
+          accountKeys: [
+            owner,
+            address(2),
+            address(3),
+            address(4),
+            mint,
+            "11111111111111111111111111111111",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          ],
+          instructions,
+        },
+      },
+      meta: {
+        err: null,
+        fee: 5000,
+        preBalances: [5000000000, 5000000000, 2039280, 2039280, 1, 1, 1],
+        postBalances: [
+          Number(5000000000n + amount - 5000n),
+          Number(5000000000n - amount),
+          2039280,
+          2039280,
+          1,
+          1,
+          1,
+        ],
+        preTokenBalances: [balance(sell ? "100000000" : "0")],
+        postTokenBalances: [balance(sell ? "0" : "100000000")],
+        innerInstructions: [],
+        loadedAddresses: { writable: [], readonly: [] },
+      },
+    };
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, result: tx }),
+    });
+  });
+  await page.goto("./pro.html");
+  await page.getByLabel("Solscan transaction link").fill(signatures.join("\n"));
+  await page
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  const journal = page.getByTestId("trade-journal");
+  await expect(journal).toContainText("Profit withheld");
+  await expect(page.getByTestId("trade-receipt").first()).toContainText(
+    "Native SOL reconciled",
+  );
+  await journal.getByRole("checkbox", { name: /I confirm/ }).check();
+  await expect(journal).toContainText(
+    "Realized result including successful-trade network fees: 0.19999 SOL",
+  );
+  await expect(journal).toContainText("0.00001 SOL");
+  const pending = page.waitForEvent("download");
+  await journal
+    .getByRole("button", { name: "Export Trade Journal evidence" })
+    .click();
+  const path = await (await pending).path();
+  if (!path) throw Error("Missing native export");
+  const exported = JSON.parse(await readFile(path, "utf8"));
+  expect(exported.journal.positions[0].realizedResult).toBe("199990000");
+  expect(exported.journal.receipts[0].nativeSol.transferNetLamports).toBe(
+    "-1000000000",
+  );
+  expect(exported.journal.receipts[0].nativeSol.transfers).toHaveLength(1);
+  expect(calls).toBe(2);
+  await page
+    .getByTestId("trade-receipt")
+    .first()
+    .screenshot({ path: "../VoucherGuard-Native-SOL-Receipt.png" });
+  await journal.screenshot({ path: "../VoucherGuard-Native-SOL-Journal.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await journal.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+    true,
+  );
+  await page.getByRole("button", { name: "Save current reviews" }).click();
+  await page.reload();
+  await journal.getByRole("checkbox", { name: /I confirm/ }).check();
+  await expect(journal).toContainText("0.19999 SOL");
+  expect(calls).toBe(2);
+  await page.getByRole("button", { name: "Clear local history" }).click();
+  ambiguous = true;
+  await page.getByLabel("Solscan transaction link").fill(signatures.join("\n"));
+  await page
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  await journal.getByRole("checkbox", { name: /I confirm/ }).check();
+  await expect(journal).toContainText("Profit withheld");
+  const blocked = page.getByTestId("trade-receipt").nth(1);
+  await blocked.getByText("Receipt scope & missing evidence").click();
+  await expect(blocked).toContainText("rent/principal is not isolated");
+  expect(calls).toBe(4);
+});

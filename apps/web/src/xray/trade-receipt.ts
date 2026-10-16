@@ -1,4 +1,5 @@
 import { base58 } from "@scure/base";
+import { type NativeSolEvidence, nativeSolFlow } from "./native-sol";
 export const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 export const WSOL = "So11111111111111111111111111111111111111112";
 export interface ReceiptLeg {
@@ -19,11 +20,17 @@ export interface TradeReceipt {
   feePayer: string;
   balances: ReceiptLeg[];
   notes: string[];
+  nativeSol?: {
+    observedNetLamports: string;
+    transferNetLamports: string;
+    feeLamports: string;
+    transfers: NativeSolEvidence["transfers"];
+  };
   candidate?: {
     token: ReceiptLeg;
-    quote: ReceiptLeg;
+    quote: Pick<ReceiptLeg, "asset" | "decimals" | "change" | "accounts">;
     side: "buy" | "sell";
-    quoteSymbol: "USDC" | "WSOL";
+    quoteSymbol: "USDC" | "WSOL" | "SOL";
   };
 }
 const obj = (v: unknown): Record<string, unknown> =>
@@ -160,15 +167,58 @@ export function buildTradeReceipt(
       };
     }
   }
+  if (
+    tokens.length === 1 &&
+    tokens[0]?.asset !== WSOL &&
+    execution === "succeeded" &&
+    sol &&
+    receipt.feeLamports !== null &&
+    receipt.feePayer === owner
+  ) {
+    const flow = nativeSolFlow(model.nativeSol, owner),
+      token = tokens[0];
+    if (flow.net === null) notes.push(...flow.reasons);
+    else if (
+      BigInt(sol.change) + BigInt(receipt.feeLamports) !==
+      BigInt(flow.net)
+    )
+      notes.push(
+        "Native SOL transfers do not reconcile with the recorded wallet change plus network fee; unexplained lamport effects remain.",
+      );
+    else if (
+      token &&
+      BigInt(flow.net) !== 0n &&
+      BigInt(token.change) < 0n !== BigInt(flow.net) < 0n
+    ) {
+      receipt.candidate = {
+        token,
+        quote: {
+          asset: "SOL",
+          decimals: 9,
+          change: flow.net,
+          accounts: [owner],
+        },
+        side: BigInt(token.change) > 0n ? "buy" : "sell",
+        quoteSymbol: "SOL",
+      };
+      receipt.nativeSol = {
+        observedNetLamports: sol.change,
+        transferNetLamports: flow.net,
+        feeLamports: receipt.feeLamports,
+        transfers: flow.transfers ?? [],
+      };
+    }
+  }
   if (!receipt.candidate)
     notes.push(
-      "No simple token ↔ USDC/persistent WSOL pair established. Native SOL changes may include rent, tips and account operations; they are not treated as a trade price.",
+      "No supported simple trade established. Native SOL needs complete transfer evidence, exact balance/fee reconciliation and no affected account lifecycle operations.",
     );
   if (
     receipt.feeLamports === null ||
     receipt.feePayer !== owner ||
     !sol ||
-    BigInt(sol.change) !== -BigInt(receipt.feeLamports)
+    (receipt.candidate?.quoteSymbol !== "SOL" &&
+      BigInt(sol.change) !== -BigInt(receipt.feeLamports))
   )
     notes.push(
       "Network fee ownership or other native SOL effects are not isolated; journal cost basis withheld.",
@@ -176,7 +226,7 @@ export function buildTradeReceipt(
   if (receipt.slot === null)
     notes.push("Ordering metadata unavailable. Reloading is never automatic.");
   notes.push(
-    "Opposing balance changes are a trade candidate, not proof of a swap. Journal calculations require your confirmation of complete trade history without external transfers, rewards or rebases.",
+    "Opposing balance changes are a trade candidate, not proof of a swap. Journal calculations require your confirmation of complete trade history without external transfers, unrelated SOL payments, rewards or rebases.",
   );
   return receipt;
 }

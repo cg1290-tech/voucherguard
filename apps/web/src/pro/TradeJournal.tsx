@@ -91,7 +91,7 @@ export function TradeJournal({
         />
         I confirm the included transactions are my trades and the imported
         history for these positions is complete, without external token
-        transfers, rewards or rebases.
+        transfers, unrelated SOL payments, rewards or rebases.
       </label>
       <p className="small muted">
         This is a user-supplied assumption, not an on-chain completeness check.
@@ -106,9 +106,10 @@ export function TradeJournal({
       )}
       {!journal.positions.length && unique.length > 0 && (
         <p>
-          No supported token ↔ USDC/persistent WSOL position found. Native SOL,
-          newly created/closed token accounts, mixed quote currencies and
-          ambiguous flows do not receive an invented cost basis.
+          No supported token ↔ SOL/USDC/persistent WSOL position found.
+          Unreconciled native SOL flows, newly created/closed token accounts,
+          mixed quote currencies and ambiguous flows do not receive an invented
+          cost basis.
         </p>
       )}
       {journal.positions.map((p) => (
@@ -162,7 +163,7 @@ export function TradeJournal({
             {p.status !== "calculated"
               ? "Cost allocation is withheld."
               : p.costsIncludeNetworkFees
-                ? "Successful-trade fees are allocated to FIFO costs/proceeds in SOL units; WSOL and SOL share 9-decimal units."
+                ? "Successful-trade network fees are allocated once to FIFO costs/proceeds in SOL units. Native transfer cash flows exclude the network fee; other recorded payments such as tips stay in the trade cash flow."
                 : "USDC result excludes SOL fees: no historical exchange rate is available, so no conversion is invented."}
           </p>
           {p.reasons.map((r) => (
@@ -197,7 +198,7 @@ export function TradeJournal({
                     excluded,
                     unavailable,
                     limitations:
-                      "Conditional FIFO for user-confirmed imported successful trades only; not complete wallet profit, tax advice or independently authenticated history. USDC results exclude SOL fees. Excluded failed transaction fees and other trading expenses are not allocated. No current prices or unrealized profit.",
+                      "Conditional FIFO for user-confirmed imported successful trades only; not complete wallet profit, tax advice or independently authenticated history. USDC results exclude SOL fees. Native SOL requires recorded transfer/fee reconciliation without affected lifecycle operations. Excluded failed transaction fees and other trading expenses are not allocated. No current prices or unrealized profit.",
                   }),
                 ],
                 { type: "application/json" },
