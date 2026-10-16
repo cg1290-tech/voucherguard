@@ -234,9 +234,9 @@ function App() {
               </strong>
               <p>
                 Saved transaction rules, wallet balance guardrails, personal
-                token lists, Trade Journal with supported native SOL trades,
-                Rule Replay, DNA comparisons and evidence exports. Hold 5M $VG
-                on Solana and sign a message to unlock.
+                token lists, Trade Journal with supported SOL wrapping and
+                account lifecycles, Rule Replay, DNA comparisons and evidence
+                exports. Hold 5M $VG on Solana and sign a message to unlock.
               </p>
             </a>
             <p className="small muted">

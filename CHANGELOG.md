@@ -4,7 +4,9 @@
 
 ### Added
 
-- Native SOL Trade Journal support for user-confirmed simple trades with complete recorded System-transfer evidence and exact wallet/fee reconciliation. Fees are allocated once; SOL and persistent WSOL share a FIFO quote currency. Lifecycle effects, unexplained lamport changes and incomplete traces withhold results; rent is never guessed and legacy reviews are not refetched automatically.
+- Supported classic Token account lifecycle in Trade Receipt/Journal: temporary SOL wrapping, unwrapping existing WSOL, and creation/closure of traded token accounts. A separate versioned certificate replays monetary instructions, proves missing zero boundaries and reconciles wallet plus owned-account capital without counting deposits/refunds as trade profit. Unknown extensions, incomplete trace and unexplained token/lamport movements withhold the result; no additional RPC calls or rent estimates.
+
+- Native SOL Trade Journal support for user-confirmed simple trades with complete recorded System-transfer evidence and exact wallet/fee reconciliation. Fees are allocated once; SOL and persistent WSOL share a FIFO quote currency. Unreconciled lifecycle effects, unexplained lamport changes and incomplete traces withhold results; rent is never guessed and legacy reviews are not refetched automatically.
 
 - Free Trade Receipt: historical sent/received net changes, recorded fees and candidate exchange ratios from loaded snapshots.
 - Pro Trade Journal: conditional FIFO for user-confirmed imported token/USDC or persistent WSOL trades, partial sales, remaining cost, local-history reuse and CSV/JSON export. Missing opening cost, discontinuities, ambiguous ordering and cost evidence withhold results. USDC results exclude SOL network fees; native SOL requires explicit transfer reconciliation, not a guessed trade price.

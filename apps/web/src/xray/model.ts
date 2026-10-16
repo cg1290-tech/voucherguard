@@ -12,6 +12,10 @@ import {
 
 import { explainFailure, type FailureEvidence } from "./failure";
 import { buildNativeSolEvidence, type NativeSolEvidence } from "./native-sol";
+import {
+  buildTokenLifecycle,
+  type TokenLifecycleEvidence,
+} from "./token-lifecycle";
 import { buildWalletImpact, type WalletImpact } from "./wallet-impact";
 
 const SYSTEM = "11111111111111111111111111111111";
@@ -52,6 +56,7 @@ export interface XRayStep {
   instructionIndex?: number;
 }
 export interface XRayModel {
+  tokenLifecycle?: TokenLifecycleEvidence;
   nativeSol?: NativeSolEvidence;
   slot?: number;
   blockTime?: number | null;
@@ -87,6 +92,7 @@ export function buildXRay(
     insights,
     walletImpact: buildWalletImpact(raw),
     nativeSol: buildNativeSolEvidence(raw),
+    tokenLifecycle: buildTokenLifecycle(raw),
   };
   if (Number.isSafeInteger(tx.slot) && Number(tx.slot) >= 0)
     model.slot = Number(tx.slot);
