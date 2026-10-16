@@ -1,0 +1,59 @@
+.trade-receipt,
+.trade-journal {
+  margin: 24px 0;
+  padding: 24px;
+  border: 1px solid #35432f;
+  background: #10190f;
+  overflow-wrap: anywhere;
+}
+.trade-receipt select,
+.trade-journal select {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  padding: 12px;
+  background: #151e13;
+  color: inherit;
+  border: 1px solid #46513e;
+}
+.trade-legs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin: 18px 0;
+}
+.trade-legs > div {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #35432f;
+}
+.trade-journal table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+}
+.trade-journal th,
+.trade-journal td {
+  padding: 12px;
+  border-bottom: 1px solid #35432f;
+}
+.trade-journal-scroll {
+  overflow: auto;
+}
+.journal-position {
+  border: 1px solid #46513e;
+  padding: 18px;
+  margin: 18px 0;
+}
+.trade-journal input[type="checkbox"] {
+  margin-right: 8px;
+}
+@media (max-width: 600px) {
+  .trade-legs {
+    grid-template-columns: 1fr;
+  }
+  .trade-receipt,
+  .trade-journal {
+    padding: 14px;
+  }
+}
