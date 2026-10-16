@@ -26,6 +26,10 @@ export function buildTradeJournal(
   receipts: TradeReceipt[],
   confirmed: boolean,
 ) {
+  const quoteCurrency = (r: TradeReceipt) =>
+    r.candidate?.quoteSymbol === "SOL" || r.candidate?.quoteSymbol === "WSOL"
+      ? "SOL"
+      : r.candidate?.quote.asset;
   const bySignature = new Map<string, TradeReceipt>(),
     conflicts = new Set<string>();
   for (const r of receipts) {
@@ -38,7 +42,7 @@ export function buildTradeJournal(
   const globalReasons = [
     ...(!confirmed
       ? [
-          "Confirm that these are trades and that this position’s imported history is complete, with no external transfers, rewards or rebases.",
+          "Confirm that these are trades and that this position’s imported history is complete, with no external transfers, unrelated SOL payments, rewards or rebases.",
         ]
       : []),
     ...(unique.some((r) => !r.candidate)
@@ -67,6 +71,16 @@ export function buildTradeJournal(
     const first = group[0]?.candidate;
     if (!first) continue;
     const reasons = [...globalReasons];
+    if (
+      unique.some(
+        (r) =>
+          r.candidate?.quote.asset === token &&
+          r.candidate.token.asset !== token,
+      )
+    )
+      reasons.push(
+        "This position mint is also spent/received as another trade’s quote; FIFO inventory across those roles is not established.",
+      );
     const quantityPrecisionKnown = group.every(
       (r) => r.candidate?.token.decimals === first.token.decimals,
     );
@@ -77,9 +91,9 @@ export function buildTradeJournal(
     if (
       group.some(
         (r) =>
-          r.candidate?.quote.asset !== first.quote.asset ||
-          r.candidate.token.decimals !== first.token.decimals ||
-          r.candidate.quote.decimals !== first.quote.decimals,
+          quoteCurrency(r) !== quoteCurrency(group[0] as TradeReceipt) ||
+          r.candidate?.token.decimals !== first.token.decimals ||
+          r.candidate?.quote.decimals !== first.quote.decimals,
       )
     )
       reasons.push(
@@ -131,7 +145,8 @@ export function buildTradeJournal(
           : BigInt(c.quote.change);
       const fee = BigInt(r.feeLamports ?? "0");
       fees += fee;
-      const sameCurrencyFee = c.quoteSymbol === "WSOL" ? fee : 0n;
+      const sameCurrencyFee =
+        c.quoteSymbol === "WSOL" || c.quoteSymbol === "SOL" ? fee : 0n;
       if (c.side === "buy") {
         bought += quantity;
         lots.push({ quantity, cost: cash + sameCurrencyFee });
@@ -164,8 +179,12 @@ export function buildTradeJournal(
     positions.push({
       token,
       decimals: first.token.decimals,
-      quote: first.quote.asset,
-      quoteSymbol: first.quoteSymbol,
+      quote: group.some((r) => r.candidate?.quoteSymbol === "SOL")
+        ? "SOL"
+        : first.quote.asset,
+      quoteSymbol: group.some((r) => r.candidate?.quoteSymbol === "SOL")
+        ? "SOL"
+        : first.quoteSymbol,
       quoteDecimals: first.quote.decimals,
       status: known ? "calculated" : "withheld",
       reasons: [...new Set(reasons)],
@@ -184,7 +203,8 @@ export function buildTradeJournal(
       networkFeesLamports: group.some((r) => r.feeLamports === null)
         ? null
         : fees.toString(),
-      costsIncludeNetworkFees: first.quoteSymbol === "WSOL",
+      costsIncludeNetworkFees:
+        first.quoteSymbol === "WSOL" || first.quoteSymbol === "SOL",
     });
   }
   return {

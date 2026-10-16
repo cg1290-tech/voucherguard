@@ -92,6 +92,17 @@ export function TradeReceiptView({ model }: { model: XRayModel }) {
               quote or slippage measurement.
             </p>
           )}
+          {receipt.nativeSol && (
+            <p>
+              Native SOL reconciled: recorded transfer cash flow{" "}
+              {displayUnits(receipt.nativeSol.transferNetLamports, 9)} SOL;
+              wallet change{" "}
+              {displayUnits(receipt.nativeSol.observedNetLamports, 9)} SOL;
+              network fee {displayUnits(receipt.nativeSol.feeLamports, 9)} SOL.
+              Journal allocates the fee once. Recorded tips or other native
+              payments are included in cash flow, not classified as swap price.
+            </p>
+          )}
           <details>
             <summary>Receipt scope & missing evidence</summary>
             {receipt.notes.map((n) => (
