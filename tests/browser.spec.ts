@@ -186,6 +186,12 @@ test("Free X-Ray loads once, plays recorded money and permissions, and keeps fai
     .click();
   const xray = page.getByTestId("transaction-xray");
   await expect(xray).toBeVisible();
+  await expect(xray.getByTestId("trade-receipt")).toContainText(
+    "What left. What arrived.",
+  );
+  await xray
+    .getByTestId("trade-receipt")
+    .screenshot({ path: "../VoucherGuard-Trade-Receipt-free.png" });
   await expect(xray.getByTestId("wallet-impact")).toContainText(
     "What actually changed?",
   );

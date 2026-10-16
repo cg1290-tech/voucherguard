@@ -8,6 +8,7 @@ import {
   snapshot,
   writeHistory,
 } from "./local-reports";
+import { TradeJournal } from "./TradeJournal";
 import { TransactionDNACompare } from "./TransactionDNACompare";
 import type { TransactionReview } from "./transaction-review";
 export function LocalReports({
@@ -102,6 +103,7 @@ export function LocalReports({
         reviews to export each card individually.
       </p>
       <p role="status">{notice}</p>
+      <TradeJournal reviews={reviews} reports={reports} owner={owner} />
       <TransactionDNACompare reviews={reviews} reports={reports} />
       {reports.map((r) => (
         <article className="pro-saved-report" key={r.id}>

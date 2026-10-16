@@ -4,6 +4,9 @@
 
 ### Added
 
+- Free Trade Receipt: historical sent/received net changes, recorded fees and candidate exchange ratios from loaded snapshots.
+- Pro Trade Journal: conditional FIFO for user-confirmed imported token/USDC or persistent WSOL trades, partial sales, remaining cost, local-history reuse and CSV/JSON export. Missing opening cost, discontinuities, ambiguous ordering and cost evidence withhold results. USDC results exclude SOL network fees; native SOL is not inferred as a trade price.
+
 - Transaction DNA in Free: an ordered visual fingerprint of scoped historical X-Ray evidence, preserving exact quantities and undecoded instruction data.
 - Pro DNA comparison between loaded and locally saved reviews: added/removed program references and operations, changed amounts/execution states, ordering differences and JSON export. Existing saved evidence is reused without a storage migration or extra RPC requests.
 - Pro Rule Replay: editable Custom, Balanced and Strict preference comparisons on already loaded evidence, Permission Map highlights and local comparison export. Captured reports and saved preferences remain unchanged.

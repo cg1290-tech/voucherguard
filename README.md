@@ -19,6 +19,8 @@ AI agents can authorize spending. A valid signature alone does not establish tha
 | Capability | Free | Pro |
 | --- | --- | --- |
 | Rule Replay: compare editable Custom, Balanced and Strict profiles on loaded evidence | — | Yes, with comparison export |
+| Trade Receipt: sent/received net changes, recorded fee and candidate exchange ratio | Yes | Yes |
+| Trade Journal: confirmed imported token ↔ USDC/persistent WSOL trades | — | Conditional FIFO, partial sales, remaining cost and CSV/JSON export |
 | Transaction DNA: visual ordered operation fingerprint | Yes | Compare loaded and locally saved reviews; exact differences and JSON export |
 | Permission Map of selected recorded account operations | Yes | Captured delegation, authority and program-list alerts |
 | One-link X-Ray with Money/Permissions lenses | Yes, no wallet required | Yes |
@@ -207,3 +209,12 @@ Contributions should include protocol evidence and tests for security behavior. 
 ### Optional Robinhood Wallet access
 
 Pro also supports a server-selected Robinhood Chain holder gate for separately configured deployments. Production uses the official Solana mint above. Robinhood Wallet connects using WalletConnect and signs only an authentication message; the Worker checks the configured ERC-20 contract and holdings on chain 4663. No contract configured means no unlock. Setup and real-wallet validation are documented in [Pro configuration](docs/pro.md#optional-robinhood-chain-integration).
+
+
+### Trade Receipt and Trade Journal
+
+Trade Receipt reuses the loaded historical balance snapshots. It shows sent/received net changes, the recorded network fee and a candidate net exchange ratio for simple token ↔ USDC or persistent WSOL pairs. Opposing balance changes do not prove a swap; ratios are not market quotes, slippage or profit. Native SOL changes can include rent, tips and account operations and are not automatically treated as a trade price. Newly created/closed token accounts with missing before/after records remain unsupported rather than assumed zero.
+
+Pro Trade Journal combines current reviews and the existing per-wallet local history (20 snapshots). Confirm the imported transactions are trades and that the position history is complete, without external transfers/rewards/rebases. This assumption is not verified by RPC and confirmation resets when evidence/selection changes. Results require an explicit zero opening token balance, continuous observed quantities and consistent token-account coverage, a single quote currency/precision, distinct known slots, known owned network fees and no unexplained native SOL net change beyond those fees. Unknown, conflicting, mixed-currency, incomplete or ambiguous records withhold the result; user confirmation cannot override those checks.
+
+FIFO allocations support partial sales. USDC results are **gross before SOL network fees**; fees are shown separately, never converted at an invented historical price. Persistent WSOL results include successful-trade network fees in SOL units. Proportional lot cost rounds down in quote base units and carries the remainder forward. Failed/excluded transaction fees and other expenses are not allocated. This is a conditional result for imported trades, not total wallet profit, unrealized profit, live valuation or a tax report. CSV leaves withheld results blank and JSON includes the evidence and assumptions. No additional RPC calls, price APIs, uploads or background scans are introduced.

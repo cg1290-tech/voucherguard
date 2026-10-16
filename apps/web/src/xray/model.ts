@@ -52,6 +52,8 @@ export interface XRayStep {
   instructionIndex?: number;
 }
 export interface XRayModel {
+  slot?: number;
+  blockTime?: number | null;
   execution: "succeeded" | "failed" | "unknown";
   steps: XRayStep[];
   gaps: string[];
@@ -84,6 +86,11 @@ export function buildXRay(
     insights,
     walletImpact: buildWalletImpact(raw),
   };
+  if (Number.isSafeInteger(tx.slot) && Number(tx.slot) >= 0)
+    model.slot = Number(tx.slot);
+  if (tx.blockTime === null) model.blockTime = null;
+  else if (Number.isSafeInteger(tx.blockTime) && Number(tx.blockTime) >= 0)
+    model.blockTime = Number(tx.blockTime);
   const top = array(msg.instructions);
   const failure = explainFailure(meta, top.length);
   if (failure) model.failure = failure;

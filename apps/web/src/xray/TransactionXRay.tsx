@@ -4,6 +4,7 @@ import type { RuleReport } from "../pro/transaction-rules";
 import type { XRayModel } from "./model";
 import { PermissionMap } from "./PermissionMap";
 import { stepFlagged as flagged } from "./permission-map";
+import { TradeReceiptView } from "./TradeReceipt";
 import { TransactionDNAView } from "./TransactionDNA";
 import { WalletImpactView } from "./WalletImpact";
 import { focusAccounts, involvesAccount } from "./wallet-focus";
@@ -85,6 +86,7 @@ export function TransactionXRay({
       aria-label="Transaction X-Ray"
     >
       <WalletImpactView model={model} rules={rules} />
+      <TradeReceiptView model={model} />
       <PermissionMap model={model} rules={rules} />
       <TransactionDNAView model={model} />
       <div className="xray-heading">

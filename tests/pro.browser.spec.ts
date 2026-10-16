@@ -954,3 +954,128 @@ test("Transaction DNA compares changed evidence and persists without extra RPC l
   await expect(comparison).toContainText("1 modified");
   expect(calls).toBe(2);
 });
+
+test("Trade Journal preserves conditional FIFO, export and local history without extra RPC", async ({
+  page,
+}) => {
+  await mockProStatus(page, {
+    status: "eligible",
+    message: "Verified",
+    address: address(9),
+  });
+  const { base58 } = await import("@scure/base");
+  const { USDC } = await import("../apps/web/src/xray/trade-receipt");
+  const token = address(8),
+    owner = address(9);
+  const first = base58.encode(new Uint8Array(64).fill(40));
+  const second = base58.encode(new Uint8Array(64).fill(41));
+  const fixture = JSON.parse(
+    await readFile("tests/fixtures/settle-tx.json", "utf8"),
+  );
+  fixture.result.transaction.message.accountKeys[0] = owner;
+  fixture.result.transaction.message.accountKeys.push(
+    token,
+    address(6),
+    USDC,
+    address(5),
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  );
+  fixture.result.meta.preBalances = Array(10).fill(1);
+  fixture.result.meta.postBalances = Array(10).fill(1);
+  fixture.result.meta.preBalances[0] = 2000000000;
+  fixture.result.meta.postBalances[0] = 1999995000;
+  fixture.result.meta.fee = 5000;
+  const balance = (accountIndex: number, mint: string, amount: string) => ({
+    accountIndex,
+    mint,
+    owner,
+    uiTokenAmount: { amount, decimals: 6 },
+  });
+  const transfer = (from: number, to: number, amount: bigint) => {
+    const b = new Uint8Array(9);
+    b[0] = 3;
+    new DataView(b.buffer).setBigUint64(1, amount, true);
+    return {
+      programIdIndex: 9,
+      accounts: [from, to, 0],
+      data: base58.encode(b),
+    };
+  };
+  let calls = 0;
+  await page.route("**/api/solana-rpc", async (route) => {
+    calls++;
+    const sig = route.request().postDataJSON().params[0];
+    const sell = sig === second;
+    const tx = structuredClone(fixture);
+    tx.result.transaction.signatures = [sig];
+    tx.result.slot = sell ? 101 : 100;
+    tx.result.meta.preTokenBalances = [
+      balance(6, token, sell ? "100000000" : "0"),
+      balance(8, USDC, sell ? "900000000" : "1000000000"),
+    ];
+    tx.result.meta.postTokenBalances = [
+      balance(6, token, sell ? "50000000" : "100000000"),
+      balance(8, USDC, sell ? "960000000" : "900000000"),
+    ];
+    tx.result.transaction.message.instructions = sell
+      ? [transfer(6, 1, 50000000n), transfer(1, 8, 60000000n)]
+      : [transfer(1, 6, 100000000n), transfer(8, 1, 100000000n)];
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(tx),
+    });
+  });
+  await page.goto("./pro.html");
+  await page.getByLabel("Solscan transaction link").fill(`${first}\n${second}`);
+  await page
+    .getByRole("button", { name: "Play transaction", exact: true })
+    .click();
+  await expect(page.getByTestId("trade-receipt")).toHaveCount(2);
+  const journal = page.getByTestId("trade-journal");
+  await expect(journal).toContainText("Profit withheld");
+  await journal.getByRole("checkbox", { name: /I confirm/ }).check();
+  await expect(journal).toContainText(
+    "Gross realized result before SOL network fees: 10 USDC",
+  );
+  await expect(journal).toContainText("Remaining cost: 50 USDC");
+  expect(calls).toBe(2);
+  const pending = page.waitForEvent("download");
+  await journal
+    .getByRole("button", { name: "Export Trade Journal evidence" })
+    .click();
+  const path = await (await pending).path();
+  if (!path) throw Error("Missing journal export");
+  const exported = JSON.parse(await readFile(path, "utf8"));
+  expect(exported.journal.positions[0].realizedResult).toBe("10000000");
+  expect(exported.journal.positions[0].costsIncludeNetworkFees).toBe(false);
+  const csvPending = page.waitForEvent("download");
+  await journal
+    .getByRole("button", { name: "Export Trade Journal CSV" })
+    .click();
+  const csvPath = await (await csvPending).path();
+  if (!csvPath) throw Error("Missing journal CSV");
+  expect(await readFile(csvPath, "utf8")).toContain('"10000000"');
+  await page.getByRole("button", { name: "Save current reviews" }).click();
+  await expect(journal).toContainText("Profit withheld");
+  await page.reload();
+  await expect(journal).toContainText("Profit withheld");
+  await journal.getByRole("checkbox", { name: /I confirm/ }).check();
+  await expect(journal).toContainText(
+    "Gross realized result before SOL network fees: 10 USDC",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await journal.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+    true,
+  );
+  await journal.screenshot({
+    path: "../VoucherGuard-Trade-Journal-mobile.png",
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await journal.screenshot({ path: "../VoucherGuard-Trade-Journal-Pro.png" });
+  await journal.getByRole("checkbox").nth(0).uncheck();
+  await journal.getByRole("checkbox", { name: /I confirm/ }).check();
+  await expect(journal).toContainText("Opening token balance is nonzero");
+  await expect(journal).toContainText("Profit withheld");
+  expect(calls).toBe(2);
+});
