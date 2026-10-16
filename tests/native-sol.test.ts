@@ -172,6 +172,9 @@ describe("Native SOL trade reconciliation", () => {
       data: base58.encode(new Uint8Array(52)),
     });
     expect(receiptEligible(receipt(create))).toBe(false);
+    const topup = raw(1, "0", "100", -1000000000n);
+    topup.transaction.message.instructions = [transfer(0, 2, 1000000000n)];
+    expect(receiptEligible(receipt(topup))).toBe(false);
   });
   it("withholds missing/truncated/malformed trace, unknown fees and legacy evidence; never refetches", () => {
     const missing = raw(1, "0", "100", -1000000000n);

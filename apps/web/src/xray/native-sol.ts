@@ -151,6 +151,24 @@ export function buildNativeSolEvidence(raw: unknown): NativeSolEvidence {
     decode(ix);
     for (const nested of groups.get(i) ?? []) decode(nested);
   }
+  // Funding one's own token account can be recoverable rent or wrapped principal,
+  // not a purchase cost. Without a full lifecycle decoder, reject that wallet.
+  for (const value of [
+    ...list(meta.preTokenBalances),
+    ...list(meta.postTokenBalances),
+  ]) {
+    const b = obj(value),
+      owner = address(b.owner);
+    const tokenAccount = Number.isSafeInteger(b.accountIndex)
+      ? keys[Number(b.accountIndex)]
+      : undefined;
+    if (
+      owner &&
+      tokenAccount &&
+      result.transfers.some((t) => t.from === owner && t.to === tokenAccount)
+    )
+      blocked.add(owner);
+  }
   result.blockedAccounts = [...blocked];
   return result;
 }
@@ -188,7 +206,7 @@ export function nativeSolFlow(
     return {
       net: null,
       reasons: [
-        "Account creation, closure or unsupported System operations affect this wallet; rent/principal is not isolated.",
+        "Account creation, closure, own token-account funding or unsupported System operations affect this wallet; rent/principal is not isolated.",
       ],
     };
   let net = 0n;
